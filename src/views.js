@@ -13,9 +13,11 @@ function render() {
   updateBadges();
   if (route.name !== "planet") stopAmbience();
   document.body.classList.toggle("hide-droid", !["map", "planet"].includes(route.name));
-  if (route.name === "map") { viewEl.replaceChildren(); viewEl.style.display = "none"; MAP.show(document.getElementById("app")); return; }
+  if (route.name === "map") { render.last = "map"; viewEl.replaceChildren(); viewEl.style.display = "none"; MAP.show(document.getElementById("app")); return; }
   MAP.hide(); viewEl.style.display = "";
   const V = { letters: viewLetters, planets: viewPlanets, memories: viewMemories, secrets: viewSecrets, planet: viewPlanet, settings: viewSettings }[route.name] || viewPlanets;
+  const key = route.name + JSON.stringify(route.params || {});
+  viewEl.classList.toggle("noanim", key === render.last); render.last = key;
   viewEl.replaceChildren(V(route.params));
 }
 function rerender() { if (route.name === "map") MAP.refresh(); else if (!$(".modal") && !$(".reader")) { const y = scrollY; render(); scrollTo(0, y); } else updateBadges(); }
@@ -96,7 +98,7 @@ function openLetter(id, fromList) {
     h("div", { class: "stamp", style: { display: "flex", justifyContent: "space-between", gap: "8px", flexWrap: "wrap" } }, h("span", null, `${P[l.planet].name} · ${CAT[l.category]}`), h("span", null, `Archivo ${String(LETTERS.indexOf(l) + 1).padStart(2, "0")}/${LETTERS.length}`)));
   const intro = K.k === "holocron" ? h("div", null, h("div", { class: "cube" + (firstTime ? " opening" : "") }, h("div", { class: "cube-in" }, [1, 2, 3, 4, 5, 6].map(() => h("i"))))) :
     K.k === "holo" ? h("div", { class: "projector", "aria-hidden": "true" }, droidSVG((S.profile && S.profile.droid) || "chispa", 44), h("div", { class: "beam" })) : null;
-  if (K.k === "holocron" && firstTime) { paper.style.animationDelay = "1.2s"; setTimeout(() => SFX.unlock(), 300); }
+  if (K.k === "holocron" && firstTime) { paper.style.animationDelay = "1.2s"; setTimeout(() => SFX.unlock(), 300); setTimeout(() => celebrate(), 1150); }
   else if (K.k === "holo") SFX.holo();
   const bg = h("div", { class: "reader-bg", style: { background: K.k === "holocron" ? "radial-gradient(800px 500px at 50% 0%,rgba(255,190,80,.18),transparent 60%),#05040a" : K.k === "archive" ? "radial-gradient(800px 500px at 50% 0%,rgba(200,160,100,.14),transparent 60%),#07060a" : `radial-gradient(800px 500px at 50% 0%,${LOOK[l.planet].atm}22,transparent 60%),radial-gradient(600px 400px at 50% 10%,rgba(127,227,255,.12),transparent 60%),#03040a` } });
   const nav = h("div", { class: "reader-actions" },

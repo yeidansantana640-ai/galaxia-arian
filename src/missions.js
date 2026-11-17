@@ -85,7 +85,7 @@ function openMission(m) {
   let finished = false;
   const finish = (msg) => {
     if (finished) return; finished = true;
-    const wasDone = flag(m.flag); raise(m.flag); SFX.good();
+    const wasDone = flag(m.flag); raise(m.flag); SFX.good(); if (!wasDone) celebrate();
     const newL = LETTERS.filter(l => l.planet === m.pid || true).filter(l => JSON.stringify(l.unlock).includes(`"${m.flag}"`) && letterUnlocked(l));
     box.append(h("div", { class: "m-done" }, h("div", { style: { fontSize: "30px" } }, "✓"), h("b", null, wasDone ? "Misión completada" : "¡Misión completada!"), msg ? h("p", { class: "m-quote", style: { fontSize: "1.15rem" } }, msg) : null,
       newL.length ? h("div", { class: "m-row" }, newL.map(l => h("button", { class: "btn btn--gold btn--sm", onclick: () => { close(); openLetter(l.id); } }, kindOf(l).glyph + " " + l.title))) : null,

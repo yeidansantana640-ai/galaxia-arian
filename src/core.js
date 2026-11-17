@@ -348,3 +348,25 @@ function toast(ic, title, body, onClick) {
   toastBox.append(t); SFX.holo(); setTimeout(close, 5200);
   while (toastBox.children.length > 2) toastBox.firstChild.remove();
 }
+
+/* ================= celebration burst ================= */
+function celebrate(kind = "gold") {
+  if (reduced()) return;
+  const cv = h("canvas", { class: "burst", "aria-hidden": "true" }); document.body.append(cv);
+  const dpr = Math.min(2, devicePixelRatio || 1), W = innerWidth, H = innerHeight; cv.width = W * dpr; cv.height = H * dpr;
+  const g = cv.getContext("2d"); g.scale(dpr, dpr);
+  const cols = kind === "gold" ? ["#ffd98a", "#fff4c8", "#ffb347", "#ffffff", getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#7fd6ff"] : ["#7fe3ff", "#ffffff", "#b06aff"];
+  const ps = Array.from({ length: 140 }, () => { const a = Math.random() * 6.283, v = 3 + Math.random() * 9; return { x: W / 2, y: H * .45, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 3, r: 1.5 + Math.random() * 3.5, c: cols[Math.floor(Math.random() * cols.length)], st: Math.random() > .55, rot: Math.random() * 6 }; });
+  const t0 = performance.now();
+  (function fr(t) {
+    const k = (t - t0) / 1600; g.clearRect(0, 0, W, H);
+    if (k < .25) { const gr = g.createRadialGradient(W / 2, H * .45, 0, W / 2, H * .45, 260 * k * 4); gr.addColorStop(0, `rgba(255,240,200,${.5 * (1 - k * 4)})`); gr.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gr; g.fillRect(0, 0, W, H); }
+    for (const p of ps) {
+      p.x += p.vx; p.y += p.vy; p.vy += .16; p.vx *= .985; p.rot += .1;
+      g.globalAlpha = Math.max(0, 1 - k); g.fillStyle = p.c;
+      if (p.st) { g.save(); g.translate(p.x, p.y); g.rotate(p.rot); g.beginPath(); for (let i = 0; i < 4; i++) { g.rotate(Math.PI / 2); g.lineTo(0, -p.r * 2.2); g.lineTo(p.r * .5, -p.r * .5); } g.fill(); g.restore(); }
+      else { g.beginPath(); g.arc(p.x, p.y, p.r, 0, 7); g.fill(); }
+    }
+    if (k < 1) requestAnimationFrame(fr); else cv.remove();
+  })(t0);
+}

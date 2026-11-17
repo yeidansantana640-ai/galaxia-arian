@@ -87,7 +87,7 @@ function claim(a) {
   S.data = { ...S.data, missions: { ...m, claimed: [...(m.claimed || []), a.id] } };
   const d = dget(); S.data.droid = { ...d, cred: d.cred + a.reward, xp: d.xp + 2 };
   S.counters = { ...S.counters, "missions.done": (S.data.missions.claimed || []).length };
-  emit(); SFX.unlock(); toast("🏅", "Logro reclamado: " + a.title, `+${a.reward} chispas para tu droide`);
+  emit(); SFX.unlock(); celebrate(); toast("🏅", "Logro reclamado: " + a.title, `+${a.reward} chispas para tu droide`);
 }
 function achievementsView() {
   const list = achievements(), box = h("div", { style: { display: "grid", gap: "8px" } });

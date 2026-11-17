@@ -86,8 +86,43 @@ const MAP = (() => {
     g.fillStyle = "rgba(200,220,255,.35)";
     for (const d of dust) { d.a += .002; const [sx, sy] = toScreen(d.x + Math.cos(d.a) * 30, d.y + Math.sin(d.a * .7) * 20); g.globalAlpha = .25 + .2 * Math.sin(d.a * 3); g.beginPath(); g.arc(sx, sy, d.r * Math.max(.6, cam.s * 1.4), 0, 7); g.fill(); }
     g.globalAlpha = 1;
+    drawShips(g, time);
     // vignette
     const vg = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .35, W / 2, H / 2, Math.max(W, H) * .75); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,.55)"); g.fillStyle = vg; g.fillRect(0, 0, W, H);
+  }
+  function bez(a, b, bend, t) {
+    const A = LAYOUT[a], B = LAYOUT[b], mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2, dx = B.x - A.x, dy = B.y - A.y, cx = mx - dy * bend, cy = my + dx * bend, u = 1 - t;
+    return [u * u * A.x + 2 * u * t * cx + t * t * B.x, u * u * A.y + 2 * u * t * cy + t * t * B.y];
+  }
+  function ship(g, x, y, ang, sc, col, alpha) {
+    g.save(); g.translate(x, y); g.rotate(ang); g.scale(sc, sc); g.globalAlpha = alpha;
+    const tr = g.createLinearGradient(-38, 0, -6, 0); tr.addColorStop(0, "rgba(120,200,255,0)"); tr.addColorStop(1, col);
+    g.fillStyle = tr; g.fillRect(-38, -1.6, 32, 3.2);
+    g.fillStyle = "#e8eef8"; g.beginPath(); g.moveTo(10, 0); g.lineTo(-6, -6); g.lineTo(-3, 0); g.lineTo(-6, 6); g.closePath(); g.fill();
+    g.fillStyle = col; g.beginPath(); g.arc(-4, 0, 2.2, 0, 7); g.fill();
+    g.restore(); g.globalAlpha = 1;
+  }
+  function drawShips(g, time) {
+    const nx = nextPlanet(), from = nx && ORDER[ORDER.indexOf(nx) - 1];
+    const sc = clamp(cam.s * 1.4, .55, 1.6);
+    if (nx && from && S.visited[from]) {
+      const r = routes.find(q => q.a === from && q.b === nx), bend = r ? r.bend : 0, t = (time % 4200) / 4200;
+      const [x, y] = bez(from, nx, bend, t), [x2, y2] = bez(from, nx, bend, Math.min(1, t + .01));
+      const [sx, sy] = toScreen(x, y), [sx2, sy2] = toScreen(x2, y2);
+      ship(g, sx, sy, Math.atan2(sy2 - sy, sx2 - sx), sc, "#ffd98a", t < .1 ? t * 10 : t > .9 ? (1 - t) * 10 : 1);
+    } else if (nx) {
+      const L = LAYOUT[nx], a = time * .0009, R = L.r * 1.9;
+      const [sx, sy] = toScreen(L.x + Math.cos(a) * R, L.y + Math.sin(a) * R * .55);
+      ship(g, sx, sy, a + Math.PI / 2, sc, "#ffd98a", 1);
+    }
+    // ambient traffic
+    for (let k = 0; k < 3; k++) {
+      const r = routes[(k * 4 + 1) % LANE_EDGES.length]; if (!r) continue;
+      const t = ((time * .00006 + k * .37) % 1), back = k % 2;
+      const tt = back ? 1 - t : t, [x, y] = bez(r.a, r.b, r.bend, tt), [x2, y2] = bez(r.a, r.b, r.bend, clamp(tt + (back ? -.01 : .01), 0, 1));
+      const [sx, sy] = toScreen(x, y), [sx2, sy2] = toScreen(x2, y2);
+      ship(g, sx, sy, Math.atan2(sy2 - sy, sx2 - sx), sc * .6, "#7fd6ff", .55);
+    }
   }
   function planetScreenSize(pid) { const r = LAYOUT[pid].r; return clamp(r * 2 * cam.s, 30, 200); }
   function place() {
