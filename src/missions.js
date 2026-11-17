@@ -529,7 +529,7 @@ function ambientLayer(pid) {
   const A = AMBI[pid], cv = h("canvas");
   const el = h("div", { class: "pv-amb", "aria-hidden": "true" }, h("div", { class: "sky", style: { background: A.sky } }), cv, svgHTML(`<svg class="scape" viewBox="0 0 100 100" preserveAspectRatio="none">${A.scape}</svg>`), h("div", { class: "veil" }));
   const g = cv.getContext("2d"); let W, H, dpr; const [type, col, n] = A.parts;
-  const size = () => { dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); };
+  const size = () => { dpr = Math.min(1.5, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); };
   size(); addEventListener("resize", size);
   const ps = Array.from({ length: reduced() ? Math.ceil(n / 4) : n }, () => ({ x: Math.random(), y: Math.random(), v: .3 + Math.random(), p: Math.random() * 6.3, s: .6 + Math.random() }));
   let t = 0;
@@ -541,7 +541,7 @@ function ambientLayer(pid) {
       switch (type) {
         case "snow": p.y += .0012 * p.v; p.x += Math.sin(t * .01 + p.p) * .0006; g.fillStyle = col; g.globalAlpha = .7; g.beginPath(); g.arc(x, y, 1.6 * p.s, 0, 7); g.fill(); break;
         case "ember": p.y -= .0011 * p.v; p.x += Math.sin(t * .02 + p.p) * .0008; g.fillStyle = col; g.globalAlpha = .5 + .5 * Math.sin(t * .05 + p.p); g.beginPath(); g.arc(x, y, 1.6 * p.s, 0, 7); g.fill(); break;
-        case "firefly": case "spark": p.x += Math.cos(t * .01 + p.p) * .0006; p.y += Math.sin(t * .013 + p.p) * .0005; g.fillStyle = col; g.globalAlpha = .35 + .65 * Math.abs(Math.sin(t * .02 + p.p)); g.shadowColor = col; g.shadowBlur = 10; g.beginPath(); g.arc(x, y, 1.8 * p.s, 0, 7); g.fill(); g.shadowBlur = 0; break;
+        case "firefly": case "spark": p.x += Math.cos(t * .01 + p.p) * .0006; p.y += Math.sin(t * .013 + p.p) * .0005; g.fillStyle = col; g.globalAlpha = .35 + .65 * Math.abs(Math.sin(t * .02 + p.p)); g.beginPath(); g.arc(x, y, 1.8 * p.s, 0, 7); g.fill(); g.globalAlpha *= .25; g.beginPath(); g.arc(x, y, 5 * p.s, 0, 7); g.fill(); break;
         case "petal": case "leaf": p.y += .0007 * p.v; p.x += Math.sin(t * .01 + p.p) * .0009; g.save(); g.translate(x, y); g.rotate(t * .01 * p.v + p.p); g.fillStyle = col; g.globalAlpha = .7; g.beginPath(); g.ellipse(0, 0, 4 * p.s, 2 * p.s, 0, 0, 7); g.fill(); g.restore(); break;
         case "sand": p.x += .0016 * p.v; p.y += Math.sin(t * .01 + p.p) * .0003; g.fillStyle = col; g.globalAlpha = .45; g.fillRect(x, y, 2 * p.s, 1); break;
         case "cloud": case "mist": p.x += .00016 * p.v; g.fillStyle = col; g.globalAlpha = type === "mist" ? .05 : .08; g.beginPath(); g.ellipse(x, y * .7, 120 * p.s, 30 * p.s, 0, 0, 7); g.fill(); break;

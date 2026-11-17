@@ -1,10 +1,11 @@
 /* ================= GALACTIC MAP ================= */
+const PBASE = 132;
 const MAP = (() => {
   let root, cv, ctx, svg, nodeLayer, labelLayer, regionLayer, sheet, coordsEl, mini, miniCtx, hintEl;
   let W = 0, H = 0, dpr = 1;
   const cam = { x: WORLD.w / 2, y: WORLD.h / 2, s: .3 };
   let target = null, minS = .2, maxS = 2.4, sel = null, dirty = true, running = false, built = false, visible = false;
-  let neb, starL = [], galaxies = [], dust = [], nextBtn = null;
+  let neb, starL = [], galaxies = [], dust = [], nextBtn = null, vigC = null, frameN = 0;
   const nodes = {}, labels = {}, routes = [];
   const toScreen = (x, y) => [(x - cam.x) * cam.s + W / 2, (y - cam.y) * cam.s + H / 2];
   const toWorld = (x, y) => [(x - W / 2) / cam.s + cam.x, (y - H / 2) / cam.s + cam.y];
@@ -29,11 +30,21 @@ const MAP = (() => {
     for (const [nx, ny, col] of NEB) for (let i = 0; i < 26; i++) blob(NW * nx + (r() - .5) * 220, NH * ny + (r() - .5) * 160, 50 + r() * 130, col, .03 + r() * .05);
     // dust lanes
     g.globalCompositeOperation = "source-over";
-    try { g.filter = "blur(5px)"; } catch (e) { }
-    for (let i = 0; i < 900; i++) { const t = r(), ang = t * 6.4, rad = 60 + t * 480; const x = NW * .5 + Math.cos(ang + .5) * rad * 1.15 + (r() - .5) * 60, y = NH * .48 + Math.sin(ang + .5) * rad * .72 + (r() - .5) * 40; g.fillStyle = `rgba(0,0,6,${.025 + r() * .045})`; g.beginPath(); g.arc(x, y, 4 + r() * 10, 0, 7); g.fill(); }
-    try { g.filter = "none"; } catch (e) { }
+    { // dust lanes drawn small, then upscaled once = cheap blur
+      const dc = document.createElement("canvas"); dc.width = NW / 6; dc.height = NH / 6; const dg = dc.getContext("2d");
+      for (let i = 0; i < 900; i++) { const t = r(), ang = t * 6.4, rad = 60 + t * 480; const x = NW * .5 + Math.cos(ang + .5) * rad * 1.15 + (r() - .5) * 60, y = NH * .48 + Math.sin(ang + .5) * rad * .72 + (r() - .5) * 40; dg.fillStyle = `rgba(0,0,6,${.025 + r() * .045})`; dg.beginPath(); dg.arc(x / 6, y / 6, (4 + r() * 10) / 6, 0, 7); dg.fill(); }
+      g.imageSmoothingQuality = "high"; g.drawImage(dc, 0, 0, NW, NH);
+    }
     g.globalCompositeOperation = "lighter";
     for (let i = 0; i < 2600; i++) { const x = r() * NW, y = r() * NH, a = r() * r() * .9; g.fillStyle = `rgba(${200 + r() * 55 | 0},${200 + r() * 55 | 0},255,${a})`; g.fillRect(x, y, r() > .97 ? 1.6 : .8, r() > .97 ? 1.6 : .8); }
+    { // bake distant galaxies + galactic grid into the texture (drawn once, not every frame)
+      const k = NW / WORLD.w; g.globalCompositeOperation = "lighter";
+      for (const [x, y, rr, rot] of [[160, 1500, 60, 25], [2200, 150, 70, -30], [2280, 1580, 45, 60], [1050, 80, 40, 10]]) drawGalaxy(g, x * k, y * k, rr * k * 2.2, rot);
+      g.globalCompositeOperation = "source-over"; g.strokeStyle = "rgba(120,170,255,.07)"; g.lineWidth = 1; g.beginPath();
+      for (let x = 0; x <= WORLD.w; x += 200) { g.moveTo(x * k, 0); g.lineTo(x * k, NH); }
+      for (let y = 0; y <= WORLD.h; y += 200) { g.moveTo(0, y * k); g.lineTo(NW, y * k); }
+      g.stroke();
+    }
     g.globalCompositeOperation = "destination-in";
     const fx = g.createLinearGradient(0, 0, NW, 0); fx.addColorStop(0, "rgba(0,0,0,0)"); fx.addColorStop(.12, "#000"); fx.addColorStop(.88, "#000"); fx.addColorStop(1, "rgba(0,0,0,0)");
     g.fillStyle = fx; g.fillRect(0, 0, NW, NH);
@@ -43,7 +54,7 @@ const MAP = (() => {
     neb = c;
     // parallax starfield layers (screen-space tiles)
     starL = [.15, .35, .6].map((depth, li) => { const n = [260, 160, 70][li], arr = []; for (let i = 0; i < n; i++) arr.push({ x: r() * 2000, y: r() * 2000, s: (li + 1) * (.5 + r() * .7), tw: r() * 6.28, c: r() > .85 ? (r() > .5 ? "#ffd9b0" : "#b0d0ff") : "#fff" }); return { depth, arr }; });
-    galaxies = [[160, 1500, 60, 25], [2200, 150, 70, -30], [2280, 1580, 45, 60], [1050, 80, 40, 10]].map(([x, y, rr, rot]) => ({ x, y, r: rr, rot }));
+    galaxies = [];
     dust = Array.from({ length: 50 }, () => ({ x: r() * WORLD.w, y: r() * WORLD.h, r: 1 + r() * 2, v: .2 + r() * .4, a: r() * 6.28 }));
   }
   function drawGalaxy(g, x, y, rad, rot) {
@@ -57,7 +68,9 @@ const MAP = (() => {
   function draw(time) {
     const g = ctx; g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.fillStyle = "#02030a"; g.fillRect(0, 0, W, H);
-    // parallax stars (behind)
+    const [x0, y0] = toScreen(0, 0);
+    g.drawImage(neb, x0, y0, WORLD.w * cam.s, WORLD.h * cam.s);
+    // parallax stars
     for (const L of starL) {
       const ox = -cam.x * cam.s * L.depth, oy = -cam.y * cam.s * L.depth;
       for (const st of L.arr) {
@@ -68,19 +81,7 @@ const MAP = (() => {
       }
     }
     g.globalAlpha = 1;
-    // nebula world texture
-    const [x0, y0] = toScreen(0, 0);
-    g.globalCompositeOperation = "lighter"; g.globalAlpha = .95;
-    g.drawImage(neb, x0, y0, WORLD.w * cam.s, WORLD.h * cam.s);
-    g.globalAlpha = 1;
-    for (const gx of galaxies) { const [sx, sy] = toScreen(gx.x, gx.y); drawGalaxy(g, sx, sy, gx.r * cam.s * 1.4 + 6, gx.rot); }
-    g.globalCompositeOperation = "source-over";
-    // galactic grid
-    g.strokeStyle = "rgba(120,170,255,.06)"; g.lineWidth = 1;
-    const step = 200; g.beginPath();
-    for (let x = 0; x <= WORLD.w; x += step) { const [a] = toScreen(x, 0); g.moveTo(a, y0); g.lineTo(a, y0 + WORLD.h * cam.s); }
-    for (let y = 0; y <= WORLD.h; y += step) { const [, b] = toScreen(0, y); g.moveTo(x0, b); g.lineTo(x0 + WORLD.w * cam.s, b); }
-    g.stroke();
+    const step = 200;
     if (cam.s > .45) { g.fillStyle = "rgba(140,180,255,.22)"; g.font = "9px Orbitron, sans-serif"; for (let x = 0; x < WORLD.w; x += step) for (let y = 0; y < WORLD.h; y += step) { const [a, b] = toScreen(x, y); if (a > -20 && a < W && b > -20 && b < H) g.fillText(String.fromCharCode(65 + x / step) + "-" + (y / step + 1), a + 4, b + 11); } }
     // space dust drifting
     g.fillStyle = "rgba(200,220,255,.35)";
@@ -88,7 +89,8 @@ const MAP = (() => {
     g.globalAlpha = 1;
     drawShips(g, time);
     // vignette
-    const vg = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .35, W / 2, H / 2, Math.max(W, H) * .75); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,.55)"); g.fillStyle = vg; g.fillRect(0, 0, W, H);
+    if (!vigC || vigC.width !== Math.round(W / 4)) { vigC = document.createElement("canvas"); vigC.width = Math.round(W / 4); vigC.height = Math.round(H / 4); const vg2 = vigC.getContext("2d"), w4 = vigC.width, h4 = vigC.height, vg = vg2.createRadialGradient(w4 / 2, h4 / 2, Math.min(w4, h4) * .35, w4 / 2, h4 / 2, Math.max(w4, h4) * .75); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,.55)"); vg2.fillStyle = vg; vg2.fillRect(0, 0, w4, h4); }
+    g.drawImage(vigC, 0, 0, W, H);
   }
   function bez(a, b, bend, t) {
     const A = LAYOUT[a], B = LAYOUT[b], mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2, dx = B.x - A.x, dy = B.y - A.y, cx = mx - dy * bend, cy = my + dx * bend, u = 1 - t;
@@ -132,8 +134,9 @@ const MAP = (() => {
     const order = ORDER.slice().sort((a, b) => prio(b) - prio(a));
     for (const pid of ORDER) {
       const L = LAYOUT[pid], [x, y] = toScreen(L.x, L.y), d = planetScreenSize(pid), n = nodes[pid];
-      n.style.transform = `translate(${x}px,${y}px) translate(-50%,-50%)`;
-      if (n._d !== Math.round(d)) { n._d = Math.round(d); n.style.width = n.style.height = n._d + "px"; n.querySelector(".pwrap").style.cssText = `position:relative;width:${n._d}px;height:${n._d}px`; n.querySelector(".planet").style.setProperty("--d", n._d + "px"); }
+      const k = d / PBASE;
+      n.style.transform = `translate(${x - PBASE / 2}px,${y - PBASE / 2}px) scale(${k})`;
+      const inv = (1 / k).toFixed(3); if (n._inv !== inv) { n._inv = inv; n.style.setProperty("--inv", inv); }
       labels[pid]._pos = [x, y + d / 2 + 8];
     }
     for (const pid of order) {
@@ -189,7 +192,8 @@ const MAP = (() => {
       cam.x -= vel.x / cam.s; cam.y -= vel.y / cam.s; vel.x *= .92; vel.y *= .92;
       if (Math.abs(vel.x) + Math.abs(vel.y) < .2) vel.active = false; clampCam(); dirty = true;
     }
-    draw(t);
+    const busy = target || vel.active || ptrs.size || dirty;
+    if (busy || (++frameN & 1)) draw(t);
     if (dirty) { place(); dirty = false; }
     requestAnimationFrame(loop);
   }
@@ -288,7 +292,7 @@ const MAP = (() => {
 
   function resize() {
     if (!cv) return;
-    dpr = Math.min(2, window.devicePixelRatio || 1); W = root.clientWidth || innerWidth; H = root.clientHeight || innerHeight;
+    W = root.clientWidth || innerWidth; dpr = Math.min(W * (root.clientHeight || innerHeight) > 600000 ? 1.25 : 1.5, window.devicePixelRatio || 1); H = root.clientHeight || innerHeight;
     cv.width = W * dpr; cv.height = H * dpr; minS = fitScale() * .85; maxS = Math.max(1.8, minS * 9);
     clampCam(); for (const id in labels) labels[id]._w = 0; kick();
   }
@@ -334,12 +338,13 @@ const MAP = (() => {
       const L = LOOK[pid];
       const n = h("button", { class: "pnode", "data-id": pid, "aria-label": P[pid].name + ": " + P[pid].tagline, style: { "--atm": L.atm } },
         h("div", { class: "halo" }),
-        planetEl(pid, 60),
+        planetEl(pid, PBASE),
         h("span", { class: "numtag", "aria-hidden": "true" }),
         h("span", { class: "nextflag", "aria-hidden": "true" }, "▼"),
         h("div", { class: "reticle", html: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="none" stroke="rgba(255,217,138,.75)" stroke-width="1" stroke-dasharray="3 5"/><path d="M50 0v10M50 90v10M0 50h10M90 50h10" stroke="#ffd98a" stroke-width="2"/><path d="M14 14l8 8M86 14l-8 8M14 86l8-8M86 86l-8-8" stroke="rgba(255,217,138,.6)" stroke-width="1.5"/></svg><div class="pulse"></div>` }));
       n.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(pid); } });
       n.addEventListener("click", e => { if (e.detail === 0) select(pid); }); // keyboard activation
+      n.style.width = n.style.height = PBASE + "px"; n.style.transformOrigin = "50% 50%";
       nodes[pid] = n; nodeLayer.append(n);
       const lb = h("div", { class: "plabel" }, h("b", null, P[pid].name), h("small", null, ""));
       labels[pid] = lb; labelLayer.append(lb);
@@ -411,7 +416,7 @@ function hyperspace(mid) {
       g.beginPath(); g.moveTo(cx + Math.cos(p.a) * r0, cy + Math.sin(p.a) * r0); g.lineTo(cx + Math.cos(p.a) * r1, cy + Math.sin(p.a) * r1); g.stroke();
     }
     g.globalAlpha = 1;
-    const gr = g.createRadialGradient(cx, cy, 0, cx, cy, 160 * Math.min(1, k * 2)); gr.addColorStop(0, "rgba(180,220,255,.35)"); gr.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    const gr = g.createRadialGradient(cx, cy, 0, cx, cy, Math.max(1, 160 * Math.min(1, k * 2))); gr.addColorStop(0, "rgba(180,220,255,.35)"); gr.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gr; g.fillRect(0, 0, W, H);
     if (k > .72 && !called) { called = true; const f = $(".flash"); f.removeAttribute("data-on"); void f.offsetWidth; f.setAttribute("data-on", ""); mid(); }
     if (k < 1) requestAnimationFrame(fr); else { el.removeAttribute("data-on"); g.clearRect(0, 0, W, H); }
   })(t0);

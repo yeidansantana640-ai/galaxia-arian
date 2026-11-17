@@ -277,8 +277,12 @@ function vnoise(r) {
 function hex2rgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
 function mix(c1, c2, t) { return [lerp(c1[0], c2[0], t), lerp(c1[1], c2[1], t), lerp(c1[2], c2[2], t)]; }
 function ramp(cols, t) { t = clamp(t, 0, .9999) * (cols.length - 1); const i = Math.floor(t); return mix(cols[i], cols[i + 1], t - i); }
+const TEXV = "galaxia-arian:tex1";
+try { Object.assign(TEX, JSON.parse(localStorage.getItem(TEXV) || "{}")); } catch (e) { }
+let texSaveT = 0;
 function texture(pid) {
   if (TEX[pid]) return TEX[pid];
+  clearTimeout(texSaveT); texSaveT = setTimeout(() => { try { localStorage.setItem(TEXV, JSON.stringify(TEX)); } catch (e) { } }, 2000);
   const L = LOOK[pid], W = 256, H = 128, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const cx = cv.getContext("2d"), img = cx.createImageData(W, H), r = rng(hash(pid)), n = vnoise(r), n2 = vnoise(r);
   const C = L.c.map(hex2rgb);
@@ -318,7 +322,7 @@ function texture(pid) {
 function planetEl(pid, d, opts = {}) {
   const L = LOOK[pid];
   const wrap = h("div", { class: "pwrap", style: { position: "relative", width: d + "px", height: d + "px" } });
-  const pl = h("div", { class: "planet", "--d": d + "px", "--atm": L.atm, "--rot": (opts.fast ? L.rot / 3 : L.rot) + "s", style: { backgroundImage: `url(${texture(pid)})` } });
+  const pl = h("div", { class: "planet", "--d": d + "px", "--atm": L.atm, "--rot": (opts.fast ? L.rot / 3 : L.rot) + "s" }, h("div", { class: "tex", style: { backgroundImage: `url(${texture(pid)})` } }));
   if (pid === "bespin") {
     wrap.append(svgHTML(`<svg class="p-extra" viewBox="0 0 100 100" style="left:-35%;top:-35%;width:170%;height:170%"><ellipse cx="50" cy="50" rx="46" ry="11" fill="none" stroke="rgba(255,220,200,.35)" stroke-width="3" transform="rotate(-16 50 50)"/><ellipse cx="50" cy="50" rx="40" ry="9" fill="none" stroke="rgba(255,200,220,.25)" stroke-width="1.5" transform="rotate(-16 50 50)"/></svg>`));
   }
@@ -363,8 +367,8 @@ function celebrate(kind = "gold") {
   const ps = Array.from({ length: 140 }, () => { const a = Math.random() * 6.283, v = 3 + Math.random() * 9; return { x: W / 2, y: H * .45, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 3, r: 1.5 + Math.random() * 3.5, c: cols[Math.floor(Math.random() * cols.length)], st: Math.random() > .55, rot: Math.random() * 6 }; });
   const t0 = performance.now();
   (function fr(t) {
-    const k = (t - t0) / 1600; g.clearRect(0, 0, W, H);
-    if (k < .25) { const gr = g.createRadialGradient(W / 2, H * .45, 0, W / 2, H * .45, 260 * k * 4); gr.addColorStop(0, `rgba(255,240,200,${.5 * (1 - k * 4)})`); gr.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gr; g.fillRect(0, 0, W, H); }
+    const k = Math.max(0, (t - t0) / 1600); g.clearRect(0, 0, W, H);
+    if (k < .25) { const gr = g.createRadialGradient(W / 2, H * .45, 0, W / 2, H * .45, Math.max(1, 260 * k * 4)); gr.addColorStop(0, `rgba(255,240,200,${.5 * (1 - k * 4)})`); gr.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gr; g.fillRect(0, 0, W, H); }
     for (const p of ps) {
       p.x += p.vx; p.y += p.vy; p.vy += .16; p.vx *= .985; p.rot += .1;
       g.globalAlpha = Math.max(0, 1 - k); g.fillStyle = p.c;
