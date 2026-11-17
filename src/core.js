@@ -95,25 +95,25 @@ const ORDER = ["naboo", "coruscant", "tatooine", "endor", "ahch-to", "mustafar",
 /* galactic layout (world units 2400 x 1700) */
 const WORLD = { w: 2400, h: 1700 };
 const LAYOUT = {
-  coruscant: { x: 1215, y: 805, r: 62, region: "Núcleo", sector: "Sector Corusca · 0-0-0" },
-  alderaan: { x: 1465, y: 600, r: 50, region: "Núcleo", sector: "Sector Alderaan · M-10" },
-  naboo: { x: 930, y: 1150, r: 56, region: "Borde Medio", sector: "Sector Chommell · O-17" },
-  bespin: { x: 1555, y: 1225, r: 66, region: "Borde Exterior", sector: "Sistema Anoat · K-18" },
-  tatooine: { x: 1990, y: 1080, r: 54, region: "Borde Exterior", sector: "Sector Arkanis · R-16" },
-  endor: { x: 1700, y: 930, r: 40, region: "Borde Exterior", sector: "Sector Moddell · H-16" },
-  "ahch-to": { x: 470, y: 760, r: 50, region: "Regiones Desconocidas", sector: "Sistema Ahch-To · ?" },
-  mustafar: { x: 780, y: 470, r: 46, region: "Borde Exterior", sector: "Sistema Mustafar · L-19" },
-  hoth: { x: 1930, y: 480, r: 50, region: "Borde Exterior", sector: "Sistema Hoth · K-18" },
-  kashyyyk: { x: 560, y: 1290, r: 56, region: "Borde Medio", sector: "Sistema Kashyyyk · P-9" },
-  jedha: { x: 1190, y: 320, r: 38, region: "Borde Medio", sector: "Sistema NaJedha · M-7" },
-  desconocido: { x: 260, y: 270, r: 48, region: "Más allá del mapa", sector: "Coordenadas: desconocidas" },
+  naboo: { x: 640, y: 1290, r: 58, region: "Borde Medio", sector: "Sector Chommell · O-17" },
+  coruscant: { x: 1060, y: 1130, r: 62, region: "Núcleo", sector: "Sector Corusca · 0-0-0" },
+  tatooine: { x: 1480, y: 1300, r: 54, region: "Borde Exterior", sector: "Sector Arkanis · R-16" },
+  endor: { x: 1880, y: 1120, r: 42, region: "Borde Exterior", sector: "Sector Moddell · H-16" },
+  "ahch-to": { x: 2080, y: 770, r: 50, region: "Regiones Desconocidas", sector: "Sistema Ahch-To · ?" },
+  mustafar: { x: 1700, y: 600, r: 46, region: "Borde Exterior", sector: "Sistema Mustafar · L-19" },
+  alderaan: { x: 1270, y: 760, r: 50, region: "Núcleo", sector: "Sector Alderaan · M-10" },
+  hoth: { x: 860, y: 640, r: 50, region: "Borde Exterior", sector: "Sistema Hoth · K-18" },
+  bespin: { x: 440, y: 820, r: 62, region: "Borde Exterior", sector: "Sistema Anoat · K-18" },
+  kashyyyk: { x: 380, y: 400, r: 54, region: "Borde Medio", sector: "Sistema Kashyyyk · P-9" },
+  jedha: { x: 830, y: 250, r: 40, region: "Borde Medio", sector: "Sistema NaJedha · M-7" },
+  desconocido: { x: 1350, y: 230, r: 48, region: "Más allá del mapa", sector: "Coordenadas: desconocidas" },
 };
 const REGIONS = [
-  { x: 1240, y: 700, t: "Núcleo Profundo", s: "Coruscant · Alderaan" },
-  { x: 760, y: 1440, t: "Borde Medio", s: "Naboo · Kashyyyk" },
-  { x: 1960, y: 1420, t: "Borde Exterior", s: "Tatooine · Bespin · Endor" },
-  { x: 380, y: 520, t: "Regiones Desconocidas", s: "Ahch-To · ?" },
-  { x: 1930, y: 250, t: "Territorios del Borde", s: "Hoth" },
+  { x: 1060, y: 1530, t: "Borde Medio", s: "Aquí empieza el viaje" },
+  { x: 2050, y: 1450, t: "Borde Exterior", s: "Tatooine · Endor" },
+  { x: 1240, y: 940, t: "Núcleo Profundo", s: "Coruscant · Alderaan" },
+  { x: 2050, y: 420, t: "Regiones Desconocidas", s: "Ahch-To" },
+  { x: 380, y: 1150, t: "Sistema Anoat", s: "Bespin" },
 ];
 /* each planet's look */
 const LOOK = {
@@ -132,7 +132,7 @@ const LOOK = {
 };
 /* hyperspace lane: story order */
 const LANE = ["naboo", "coruscant", "tatooine", "endor", "ahch-to", "mustafar", "alderaan", "hoth", "bespin", "kashyyyk", "jedha", "desconocido"];
-const LANE_EDGES = [["naboo", "coruscant"], ["coruscant", "alderaan"], ["coruscant", "endor"], ["endor", "tatooine"], ["endor", "bespin"], ["naboo", "kashyyyk"], ["naboo", "bespin"], ["alderaan", "hoth"], ["alderaan", "jedha"], ["jedha", "mustafar"], ["mustafar", "ahch-to"], ["ahch-to", "kashyyyk"], ["ahch-to", "desconocido"], ["hoth", "tatooine"], ["coruscant", "mustafar"]];
+const LANE_EDGES = LANE.slice(1).map((b, i) => [LANE[i], b]);
 
 /* ================= unlock logic ================= */
 const visitedCount = () => Object.keys(S.visited).filter(k => S.visited[k]).length;

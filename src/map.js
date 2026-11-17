@@ -4,7 +4,7 @@ const MAP = (() => {
   let W = 0, H = 0, dpr = 1;
   const cam = { x: WORLD.w / 2, y: WORLD.h / 2, s: .3 };
   let target = null, minS = .2, maxS = 2.4, sel = null, dirty = true, running = false, built = false, visible = false;
-  let neb, starL = [], galaxies = [], dust = [];
+  let neb, starL = [], galaxies = [], dust = [], nextBtn = null;
   const nodes = {}, labels = {}, routes = [];
   const toScreen = (x, y) => [(x - cam.x) * cam.s + W / 2, (y - cam.y) * cam.s + H / 2];
   const toWorld = (x, y) => [(x - W / 2) / cam.s + cam.x, (y - H / 2) / cam.s + cam.y];
@@ -264,13 +264,20 @@ const MAP = (() => {
       n.toggleAttribute("data-next", pid === nx); n.toggleAttribute("data-locked", !planetUnlocked(pid));
       lb.toggleAttribute("data-next", pid === nx); lb.toggleAttribute("data-done", !!done);
       const un = unlockedSet(), ls = lettersOf(pid), got = ls.filter(l => un.has(l.id)).length;
-      lb.querySelector("small").textContent = !planetUnlocked(pid) ? "Señal cifrada" : pid === nx ? "Próximo destino" : `${got}/${ls.length} cartas`;
-      lb.querySelector("b").textContent = planetUnlocked(pid) ? P[pid].name : "¿?";
+      lb.querySelector("small").textContent = !planetUnlocked(pid) ? "Se revela al visitar 10" : pid === nx ? (S.visited[pid] ? "▶ Sigue aquí" : "▶ Ve aquí") : done ? "Completado ✓" : S.visited[pid] ? `${got}/${ls.length} cartas` : "Sin explorar";
+      lb.querySelector("b").textContent = `${ORDER.indexOf(pid) + 1} · ` + (planetUnlocked(pid) ? P[pid].name : "¿?");
+      n.querySelector(".numtag").textContent = ORDER.indexOf(pid) + 1;
       lb._w = 0;
       const lockedRoute = routes.filter(r => r.a === pid || r.b === pid);
       for (const r of lockedRoute) r.el.style.opacity = planetUnlocked(r.a) && planetUnlocked(r.b) ? 1 : .25;
     }
-    for (const r of routes) if (r.on) r.on.style.display = S.visited[r.a] && S.visited[r.b] ? "" : "none";
+    for (const r of routes) {
+      if (!r.on) continue;
+      const doneA = S.visited[r.a], doneB = S.visited[r.b], isNext = r.b === nx && doneA;
+      r.on.style.display = (doneA && doneB) || isNext ? "" : "none";
+      r.on.setAttribute("class", "route " + (isNext ? "route-next" : "route-on"));
+    }
+    if (nextBtn) { nextBtn.style.display = nx ? "" : "none"; if (nx) nextBtn.querySelector("b").textContent = `${ORDER.indexOf(nx) + 1} · ${P[nx].name}`, nextBtn.querySelector("small").textContent = S.visited[nx] ? "Te quedan misiones aquí" : visitedCount() ? "Siguiente parada del viaje" : "Empieza tu viaje aquí"; }
     if (sel) fillSheet(sel);
     kick();
   }
@@ -285,7 +292,7 @@ const MAP = (() => {
     labelLayer = h("div", { style: { position: "absolute", inset: 0, pointerEvents: "none" } });
     // routes
     const g1 = s("g"), g2 = s("g"), g3 = s("g");
-    LANE_EDGES.forEach(([a, b], i) => { const el = s("path", { class: "route route-base" }), on = s("path", { class: "route route-on" }); g1.append(el); g2.append(on); routes.push({ a, b, el, on, bend: ((i % 2) ? .12 : -.12) }); });
+    LANE_EDGES.forEach(([a, b], i) => { const el = s("path", { class: "route route-base" }), on = s("path", { class: "route route-on" }); g1.append(el); g2.append(on); routes.push({ a, b, el, on, bend: ((i % 2) ? .08 : -.08) }); });
     for (const e of DATA.effects) for (const f of e.requires) { const a = f.split(".")[0], b = e.effect.planet; if (a !== b && !routes.some(r => (r.a === a && r.b === b) || (r.a === b && r.b === a))) { const el = s("path", { class: "route route-link" }); g3.append(el); routes.push({ a, b, el, bend: .22, link: e }); } }
     svg.append(g3, g1, g2);
     for (const pid of ORDER) {
@@ -293,6 +300,8 @@ const MAP = (() => {
       const n = h("button", { class: "pnode", "data-id": pid, "aria-label": P[pid].name + ": " + P[pid].tagline, style: { "--atm": L.atm } },
         h("div", { class: "halo" }),
         planetEl(pid, 60),
+        h("span", { class: "numtag", "aria-hidden": "true" }),
+        h("span", { class: "nextflag", "aria-hidden": "true" }, "▼"),
         h("div", { class: "reticle", html: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="none" stroke="rgba(255,217,138,.75)" stroke-width="1" stroke-dasharray="3 5"/><path d="M50 0v10M50 90v10M0 50h10M90 50h10" stroke="#ffd98a" stroke-width="2"/><path d="M14 14l8 8M86 14l-8 8M14 86l8-8M86 86l-8-8" stroke="rgba(255,217,138,.6)" stroke-width="1.5"/></svg><div class="pulse"></div>` }));
       n.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(pid); } });
       n.addEventListener("click", e => { if (e.detail === 0) select(pid); }); // keyboard activation
@@ -304,7 +313,9 @@ const MAP = (() => {
     const ui = h("div", { class: "map-ui" });
     const head = h("div", { class: "map-head" },
       h("div", { class: "map-title" }, h("h1", null, "Mapa Galáctico"), h("p", null, `Archivo de las estrellas perdidas · ${herName()}`)),
+      h("button", { class: "mtool", "aria-label": "Ayuda: cómo funciona", onclick: () => openHelp() }, h("span", { style: { font: "700 20px var(--f-display)" } }, "?")),
       h("button", { class: "mtool", "aria-label": "Opciones", onclick: () => go("settings") }, icon("gear")));
+    nextBtn = h("button", { class: "nextbtn holo", onclick: () => { const nx = nextPlanet(); if (nx) select(nx); } }, h("span", { class: "nb-ic" }, "▶"), h("span", { class: "nb-t" }, h("small"), h("b")));
     coordsEl = h("div", { class: "coords" });
     const tools = h("div", { class: "map-tools" },
       h("button", { class: "mtool", "aria-label": "Acercar", onclick: () => zoomBy(1.6) }, icon("plus")),
@@ -316,7 +327,7 @@ const MAP = (() => {
     miniWrap.addEventListener("pointerdown", e => { const r = miniWrap.getBoundingClientRect(); flyTo((e.clientX - r.left) / r.width * WORLD.w, (e.clientY - r.top) / r.height * WORLD.h, cam.s, 500); });
     sheet = h("div", { class: "sheet holo", role: "dialog", "aria-label": "Planeta seleccionado" });
     hintEl = h("div", { class: "map-hint" }, "Toca un planeta · pellizca para acercar");
-    ui.append(head, coordsEl, tools, miniWrap, hintEl, sheet);
+    ui.append(head, nextBtn, coordsEl, tools, miniWrap, hintEl, sheet);
     root.append(cv, svg, regionLayer, nodeLayer, labelLayer, ui);
     root.addEventListener("pointerdown", onDown); root.addEventListener("pointermove", onMove);
     root.addEventListener("pointerup", onUp); root.addEventListener("pointercancel", onUp);
@@ -333,13 +344,13 @@ const MAP = (() => {
     root.style.display = ""; visible = true; resize();
     if (!show.once) {
       show.once = true; cam.s = fitScale() * .6; cam.x = WORLD.w / 2; cam.y = WORLD.h / 2;
-      const portrait = H > W * 1.2, f = portrait ? Math.max(fitScale(), (H - 140) / (WORLD.h * 1.05)) : fitScale(), nx = LAYOUT[S.lastPlanet] || LAYOUT.coruscant;
+      const portrait = H > W * 1.2, f = portrait ? Math.max(fitScale(), (H - 140) / (WORLD.h * 1.05)) : fitScale(), nx = LAYOUT[nextPlanet() || S.lastPlanet] || LAYOUT.naboo;
       flyTo(portrait ? clamp(nx.x, W / 2 / f - 100, WORLD.w - W / 2 / f + 100) : WORLD.w / 2, portrait ? WORLD.h / 2 + 30 : WORLD.h / 2 - 20, f, 1800);
     }
     refresh(); kick();
   }
   function hide() { visible = false; if (root) root.style.display = "none"; deselect && sel && deselect(); document.body.classList.remove("sheet-open"); }
-  return { show, hide, refresh, select, fitAll };
+  return { show, hide, refresh, select, fitAll, el: () => root };
 })();
 
 /* next destination suggestion */

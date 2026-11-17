@@ -4,7 +4,7 @@ const TABS = [["map", "Mapa", "map"], ["letters", "Cartas", "cards"], ["planets"
 function go(name, params = {}, push = true) {
   closeModals();
   if (push) try { history.pushState({ name, params }, ""); } catch (e) { }
-  route = { name, params }; render(); window.scrollTo(0, 0);
+  route = { name, params }; render(); window.scrollTo(0, 0); rememberRoute();
 }
 window.addEventListener("popstate", e => { const st = e.state || { name: "map", params: {} }; route = st; closeModals(); closeReader(); render(); });
 function render() {
@@ -132,16 +132,19 @@ function viewPlanet({ id }) {
         h("h1", null, p.name), h("div", { class: "tag" }, p.tagline), h("p", { class: "desc" }, p.description),
         h("div", { class: "pv-stats" }, sub.map(t => h("span", { class: "chip chip--accent" }, t)), md === ms.length && ms.length ? h("span", { class: "chip chip--ok" }, "Planeta completado") : null)),
       effs.length ? h("div", { style: { display: "grid", gap: "8px" } }, effs.map(e => h("div", { class: "effect" }, h("div", { class: "ic" }, e.effect.kind === "transmission" ? "📡" : e.effect.kind === "hint" ? "🧭" : "✨"), h("div", null, h("b", null, e.effect.title), h("span", null, e.effect.body))))) : null,
+      h("div", { class: "howto" }, h("b", null, md === ms.length ? "¡Planeta completado!" : "Cómo funciona este planeta"),
+        h("span", null, md === ms.length ? "Ya has hecho todas sus misiones. Puedes releer sus cartas abajo o seguir el viaje." : "Juega las misiones de abajo, empezando por la marcada. Cada misión completada abre cartas nuevas, que aparecen más abajo en «Cartas de este planeta»."),
+        md === ms.length && nextPlanet() ? h("button", { class: "btn btn--primary btn--sm", style: { marginTop: "8px" }, onclick: () => { const np = nextPlanet(); SFX.jump(); hyperspace(() => go("planet", { id: np })); } }, `Siguiente destino: ${ORDER.indexOf(nextPlanet()) + 1} · ${P[nextPlanet()].name} →`) : null),
+      h("div", { class: "section-t" }, `Misiones · ${md}/${ms.length}`),
+      h("div", { class: "missions" }, (() => { const first = ms.find(m => !flag(m.flag) && missionAvailable(m)); return ms.map((m, i) => {
+        const dn = flag(m.flag), av = missionAvailable(m), isFirst = m === first, nL = lettersForFlag(m.flag).length;
+        return h("button", { class: "mission holo", "data-done": dn ? "" : null, "data-first": isFirst ? "" : null, "data-locked": av ? null : "", onclick: () => { SFX.tap(); openMission(m); } },
+          h("div", { class: "mi" }, dn ? "✓" : m.ic), h("div", { class: "grow" }, isFirst ? h("span", { class: "chip chip--gold", style: { marginBottom: "4px" } }, "▶ Empieza aquí") : null, h("b", null, `${i + 1}. ${m.t}`), h("span", null, av ? m.d : "🔒 " + m.reqText), nL ? h("small", { class: "mi-l" }, `✉ Abre ${nL} carta${nL > 1 ? "s" : ""}`) : null), h("span", { class: dn ? "chip chip--ok" : isFirst ? "chip chip--gold" : "chip" }, dn ? "Hecha" : av ? "Jugar" : "Bloqueada"));
+      }); })()),
+      h("div", { class: "section-t" }, `Cartas de este planeta · ${got}/${ls.length}`),
+      h("div", { class: "lcards" }, ls.map(l => letterCard(l, un))),
       orbiCard(),
       (() => { const n = Object.keys(DATA2.npcs).find(k => DATA2.npcs[k].where === p.name); return n ? npcCard(n) : null; })(),
-      h("div", { class: "section-t" }, "Misiones"),
-      h("div", { class: "missions" }, ms.map(m => {
-        const dn = flag(m.flag), av = missionAvailable(m);
-        return h("button", { class: "mission holo", "data-done": dn ? "" : null, "data-locked": av ? null : "", onclick: () => { SFX.tap(); openMission(m); } },
-          h("div", { class: "mi" }, m.ic), h("div", { class: "grow" }, h("b", null, m.t), h("span", null, av ? m.d : "🔒 " + m.reqText)), h("span", { class: dn ? "chip chip--ok" : "chip" }, dn ? "Hecha" : av ? "Jugar" : "Bloqueada"));
-      })),
-      h("div", { class: "section-t" }, "Cartas de " + p.name),
-      h("div", { class: "lcards" }, ls.map(l => letterCard(l, un))),
       h("button", { class: "btn", onclick: () => { MAP.select && setTimeout(() => MAP.select(id), 300); go("map"); } }, "Ver en el mapa")));
 }
 
@@ -342,8 +345,8 @@ function setup(done) {
   };
   document.body.append(el); draw();
 }
-function whatsNew() {
-  if (getData("v2seen")) return;
+function whatsNew(after) {
+  if (getData("v2seen") || !S.readLetters.length) { if (!getData("v2seen")) setData("v2seen", true); return after && after(); }
   setData("v2seen", true);
   const close = modal(h("div", null, h("div", { class: "eyebrow" }, "Transmisión prioritaria"), h("h2", null, "La galaxia se ha ampliado")), [
     h("div", { class: "projector" }, droidSVG((S.profile && S.profile.droid) || "chispa", 50), h("div", { class: "beam", style: { height: "30px" } })),
@@ -355,7 +358,7 @@ function whatsNew() {
       h("p", { style: { fontSize: "1.05rem", fontFamily: "var(--f-body)" } }, "★ Puedes guardar tus cartas favoritas."),
       h("p", { style: { fontSize: "1.05rem", fontFamily: "var(--f-body)" } }, `🤖 Toca a ${droidName()} para hablar, cuidarle, ponerle accesorios y jugar.`),
       h("p", { style: { fontSize: "1.05rem", fontFamily: "var(--f-body)" } }, "Todo lo que ya habías encontrado sigue aquí.")),
-    h("button", { class: "btn btn--primary", onclick: () => close() }, "Explorar")], null, "📡");
+    h("button", { class: "btn btn--primary", onclick: () => close() }, "Explorar")], after, "📡");
 }
 
 /* ================= boot ================= */
@@ -364,8 +367,13 @@ function boot() {
   applySettings(); buildTabbar(); placeDroid();
   onChange(() => { clearTimeout(boot.t); boot.t = setTimeout(rerender, 30); });
   try { history.replaceState({ name: "map", params: {} }, ""); } catch (e) { }
-  const start = () => { render(); setTimeout(() => { whatsNew(); }, 2200); setTimeout(() => droidSay(droidHint()), 4200); };
+  const start = () => {
+    const back = welcomeBack(); render(); rememberRoute();
+    const tour = () => { if (!getData("tourDone")) { if (route.name !== "map") go("map"); setTimeout(startTour, 900); } else if (!back) setTimeout(() => droidSay(droidHint()), 1500); };
+    setTimeout(() => whatsNew(tour), 2000);
+  };
   const afterIntro = () => S.profile ? start() : setup(start);
-  if (!S.introSeen) playIntro(afterIntro); else afterIntro();
+  gate(() => { if (!S.introSeen) playIntro(afterIntro); else afterIntro(); });
+  addEventListener("pagehide", () => { rememberRoute(); try { localStorage.setItem(KEY, JSON.stringify({ state: { ...S, wizard: null }, version: 3 })); } catch (e) { } });
 }
 document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", boot) : boot();

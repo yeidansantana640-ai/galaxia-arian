@@ -70,13 +70,18 @@ const MISSIONS = {
   ],
 };
 const FLAG2M = {}; for (const pid in MISSIONS) for (const m of MISSIONS[pid]) { m.pid = pid; FLAG2M[m.flag] = m; }
+const lettersForFlag = f => LETTERS.filter(l => JSON.stringify(l.unlock).includes(`"${f}"`));
 const missionAvailable = m => !m.req || m.req.every(f => flag(f));
 
 /* ================= mission runner ================= */
 function openMission(m) {
   const box = h("div", { style: { display: "grid", gap: "14px" } });
   const done = flag(m.flag);
-  const close = modal(h("div", null, h("div", { class: "eyebrow" }, P[m.pid].name + " · Misión"), h("h2", null, m.t)), [h("p", { class: "m-note" }, m.d), box], () => { }, m.ic);
+  const opens = lettersForFlag(m.flag);
+  const close = modal(h("div", null, h("div", { class: "eyebrow" }, P[m.pid].name + " · Misión"), h("h2", null, m.t)), [
+    h("div", { class: "howto" }, h("b", null, "Qué hay que hacer"), h("span", null, m.d)),
+    opens.length ? h("p", { class: "muted", style: { margin: 0, fontSize: "13px" } }, `🔓 Al completarla te acercas a ${opens.length === 1 ? "1 carta" : opens.length + " cartas"} de este planeta.`) : null,
+    box], () => { }, m.ic);
   let finished = false;
   const finish = (msg) => {
     if (finished) return; finished = true;
@@ -84,6 +89,13 @@ function openMission(m) {
     const newL = LETTERS.filter(l => l.planet === m.pid || true).filter(l => JSON.stringify(l.unlock).includes(`"${m.flag}"`) && letterUnlocked(l));
     box.append(h("div", { class: "m-done" }, h("div", { style: { fontSize: "30px" } }, "✓"), h("b", null, wasDone ? "Misión completada" : "¡Misión completada!"), msg ? h("p", { class: "m-quote", style: { fontSize: "1.15rem" } }, msg) : null,
       newL.length ? h("div", { class: "m-row" }, newL.map(l => h("button", { class: "btn btn--gold btn--sm", onclick: () => { close(); openLetter(l.id); } }, kindOf(l).glyph + " " + l.title))) : null,
+      (() => {
+        const nm = (MISSIONS[m.pid] || []).find(x => x !== m && !flag(x.flag) && missionAvailable(x));
+        if (nm) return h("button", { class: "btn btn--primary btn--sm", onclick: () => { close(); openMission(nm); } }, `Siguiente misión: ${nm.ic} ${nm.t} →`);
+        const np = nextPlanet();
+        if (np && np !== m.pid) return h("button", { class: "btn btn--primary btn--sm", onclick: () => { close(); SFX.jump(); hyperspace(() => go("planet", { id: np })); } }, `¡Planeta terminado! Viajar a ${ORDER.indexOf(np) + 1} · ${P[np].name} →`);
+        return null;
+      })(),
       h("button", { class: "btn btn--ghost btn--sm", onclick: close }, "Volver al planeta")));
     setTimeout(() => box.lastChild && box.lastChild.scrollIntoView({ behavior: "smooth", block: "nearest" }), 80);
   };
