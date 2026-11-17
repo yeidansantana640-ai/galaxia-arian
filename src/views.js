@@ -324,7 +324,7 @@ function playIntro(done) {
   const show = () => {
     clearTimeout(tm); stg.replaceChildren(steps[i]()); dots.replaceChildren(...steps.map((_, k) => h("i", { "data-on": k <= i ? "" : null })));
     el.querySelector(".i-hint").style.visibility = i === steps.length - 1 || i === 2 ? "hidden" : "";
-    if (i === 3) SFX.saber();
+    if (i === 3) { SFX.saber(); fanfare(); }
     if (dur[i]) tm = setTimeout(next, dur[i]);
   };
   const next = () => { if (i < steps.length - 1) { i++; show(); } };

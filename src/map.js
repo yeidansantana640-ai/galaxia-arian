@@ -253,12 +253,12 @@ const MAP = (() => {
     droidBubble && droidBubble.remove();
     const land = W > H && H < 560, oy = land ? 0 : 150 / s, ox = land ? 180 / s : 0; // keep planet clear of the sheet
     flyTo(L.x + ox, L.y + oy, s, 900);
-    fillSheet(pid); sheet.setAttribute("data-open", ""); root.classList.add("sheet-open"); document.body.classList.add("sheet-open");
+    fillSheet(pid); sheet.setAttribute("data-open", ""); root.classList.add("has-sel"); root.classList.add("sheet-open"); document.body.classList.add("sheet-open");
     kick();
   }
   function deselect() {
     sel = null; for (const id in nodes) nodes[id].removeAttribute("data-sel");
-    sheet.removeAttribute("data-open"); root.classList.remove("sheet-open"); document.body.classList.remove("sheet-open"); kick();
+    sheet.removeAttribute("data-open"); root.classList.remove("sheet-open", "has-sel"); document.body.classList.remove("sheet-open"); kick();
   }
   function fillSheet(pid) {
     const p = P[pid], L = LAYOUT[pid], ls = lettersOf(pid), un = unlockedSet(), got = ls.filter(l => un.has(l.id)).length, read = ls.filter(l => S.readLetters.includes(l.id)).length;

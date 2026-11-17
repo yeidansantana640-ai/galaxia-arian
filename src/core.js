@@ -236,6 +236,10 @@ const SFX = {
   bad: () => tone([{ f: 220, to: 160, d: .25, type: "triangle", g: .14 }]),
   note: f => tone([{ f, d: .45, g: .16 }, { f: f * 2, d: .3, g: .04 }]),
 };
+function fanfare() { // original short motif
+  const n = [[392, 0, .35], [523, .3, .35], [659, .6, .3], [784, .9, .9], [659, 1.6, .25], [784, 1.85, 1.2]];
+  tone(n.map(([f, st, d]) => ({ f, start: st, d, type: "triangle", g: .12, a: .03 })).concat(n.map(([f, st, d]) => ({ f: f / 2, start: st, d: d + .2, g: .06 }))));
+}
 const AMB = {
   naboo: [220, 277, 330], coruscant: [196, 247, 294], tatooine: [174, 220, 261], endor: [196, 233, 294], "ahch-to": [147, 185, 220], mustafar: [110, 131, 165],
   alderaan: [262, 330, 392], hoth: [294, 370, 440], bespin: [233, 294, 349], kashyyyk: [165, 208, 247], jedha: [185, 220, 277], desconocido: [123, 156, 185],

@@ -525,3 +525,9 @@ textarea.field{min-height:110px;resize:vertical}
 .tab svg{transition:transform .3s var(--ease)}
 .tab[aria-current=page] svg{transform:translateY(-2px) scale(1.08)}
 .noanim .pv-hero .big,.noanim .pv-hero h1,.noanim .pv-hero .tag,.noanim .pv-hero .desc,.noanim .pv-hero .pv-stats,.noanim .pv-hero .eyebrow,.noanim .pv-inner>*,.noanim .view>.page>*{animation:none!important}
+.pnode,.plabel{transition:opacity .4s}
+.has-sel .pnode:not([data-sel]){opacity:.5}
+.has-sel .plabel:not([data-hide]){opacity:.55}
+.pv-hero .big{position:relative}
+.pv-hero .big::after{content:"";position:absolute;inset:-14%;border-radius:50%;border:1px solid var(--atm);opacity:.35;transform:rotateX(72deg);animation:orbit 12s linear infinite;pointer-events:none}
+@keyframes orbit{to{transform:rotateX(72deg) rotate(360deg)}}
