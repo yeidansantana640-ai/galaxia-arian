@@ -77,6 +77,7 @@ function save() {
   clearTimeout(saveT);
   saveT = setTimeout(() => {
     try { localStorage.setItem(KEY, JSON.stringify({ state: { ...S, wizard: null }, version: 3 })); } catch (e) { memOnly = true; }
+    if (typeof syncTouch === "function") syncTouch();
   }, 120);
 }
 function emit() { save(); listeners.forEach(f => { try { f(); } catch (e) { console.error(e); } }); }

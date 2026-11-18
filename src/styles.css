@@ -975,3 +975,6 @@ html[data-wipe=clock]::view-transition-new(root){animation:wipe-clock .7s linear
 html.lang-out body{transition:opacity .25s,filter .25s;opacity:0;filter:blur(6px)}
 @media (max-width:520px){.langsw--map{padding:0;width:44px;height:44px;justify-content:center}.langsw--map button[data-on]{display:none}.langsw--map button{padding:0;width:44px;height:44px;display:grid;place-items:center;font-size:10.5px;color:#fff}}
 .langsw--gate{position:absolute;top:calc(env(safe-area-inset-top,0px) + 16px);right:16px;z-index:5}
+.sync-st{font:600 13px/1.3 Inter,sans-serif;color:rgba(220,235,255,.8);padding:8px 12px;border-radius:999px;background:rgba(127,227,255,.08);border:1px solid rgba(127,227,255,.2)}
+.sync-st[data-st="ok"]{color:#bff5d0;background:rgba(80,220,140,.1);border-color:rgba(80,220,140,.3)}
+.sync-st[data-st="error"],.sync-st[data-st="offline"]{color:#ffd9a8;background:rgba(255,180,90,.08);border-color:rgba(255,180,90,.3)}

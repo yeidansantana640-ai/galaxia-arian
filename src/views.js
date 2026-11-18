@@ -330,6 +330,8 @@ function viewSettings() {
     sw("ambience", "Ambiente de los planetas", "Una música suave distinta en cada planeta.", () => route.name === "planet" && ambience(route.params.id)),
     h("div", { class: "setrow" }, h("div", { class: "grow" }, h("b", null, "Volumen")), h("input", { type: "range", min: 0, max: 1, step: .05, value: st.volume, class: "range", style: { width: "50%" }, oninput: e => { S.settings = { ...S.settings, volume: +e.target.value }; save(); }, onchange: () => SFX.select() })),
     sw("reduceMotion", "Reducir animaciones", "Menos movimiento en pantalla.", applySettings),
+    h("div", { class: "setrow", style: { display: "grid", gap: "8px" } }, h("div", null, h("b", null, "Tu cuenta en todos tus dispositivos"), h("span", null, "Entra con la misma contraseña en el móvil, el iPad o el ordenador y seguirás justo donde lo dejaste. Tu progreso viaja cifrado.")),
+      h("div", { style: { display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" } }, syncBadge(), syncOn() ? h("button", { class: "btn btn--sm", onclick: () => { syncState.status = "busy"; syncPaint(); syncNow(); } }, "Sincronizar ahora") : null)),
     h("div", { class: "setrow", style: { display: "grid", gap: "8px" } }, h("div", null, h("b", null, "Idioma · Llengua"), h("span", { "data-noi18n": "" }, "Las cartas siempre se leen tal y como se escribieron. · Les cartes sempre es lligen tal com es van escriure.")), langToggle("langsw--set")),
     h("div", { class: "setrow", style: { display: "grid", gap: "8px" } }, h("div", null, h("b", null, "Calidad gráfica"), h("span", null, "«Automática» usa el modo ligero en móviles y tablets para que todo vaya fluido.")),
       h("div", { class: "seg" }, [["auto", "Automática"], ["lite", "Ligera"], ["high", "Máxima"]].map(([k, t]) => h("button", { "aria-pressed": (st.graphics || "auto") === k ? "true" : "false", onclick: () => { S.settings = { ...S.settings, graphics: k }; emit(); applySettings(); SFX.tap(); toast("⚙️", "Calidad gráfica: " + t, "Se aplica del todo al recargar la página."); render(); } }, t)))),
@@ -448,7 +450,7 @@ function boot() {
     setTimeout(() => whatsNew(tour), 2000);
   };
   const afterIntro = () => S.profile ? start() : setup(start);
-  gate(() => { if (!S.introSeen) playIntro(afterIntro); else afterIntro(); });
+  gate(async () => { await syncBoot(); if (!S.introSeen) playIntro(afterIntro); else afterIntro(); });
   addEventListener("pagehide", () => { rememberRoute(); try { localStorage.setItem(KEY, JSON.stringify({ state: { ...S, wizard: null }, version: 3 })); } catch (e) { } });
 }
 document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", boot) : boot();
