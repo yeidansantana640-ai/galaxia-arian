@@ -283,14 +283,28 @@ function ramp(cols, t) { t = clamp(t, 0, .9999) * (cols.length - 1); const i = M
 const TEXV = "galaxia-arian:tex2";
 try { Object.assign(TEX, JSON.parse(localStorage.getItem(TEXV) || "{}")); } catch (e) { }
 let texSaveT = 0;
-function texture(pid) {
-  if (TEX[pid]) return TEX[pid];
-  clearTimeout(texSaveT); texSaveT = setTimeout(() => { try { localStorage.setItem(TEXV, JSON.stringify(TEX)); } catch (e) { } }, 2000);
-  const L = LOOK[pid], W = 256, H = 128, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+const TEXHI = {};
+function clouds(pid) {
+  const key = pid + "@cl"; if (TEXHI[key]) return TEXHI[key];
+  const k = LOOK[pid].kind; if (!["terran", "ocean", "forest", "swamp", "ice", "lava", "gas"].includes(k)) return null;
+  const W = 256, H = 128, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const g = cv.getContext("2d"), img = g.createImageData(W, H), n = vnoise(rng(hash(pid + "cl")));
+  const fbm = (u, v) => { let a = 0, amp = .5, fr = 2.2; for (let o = 0; o < 5; o++) { const ang = u * Math.PI * 2, R = fr * 1.6; a += amp * n(Math.cos(ang) * R + 20, Math.sin(ang) * R + 20 + v * fr * 3.4); amp *= .5; fr *= 2; } return a; };
+  const tint = k === "lava" ? [40, 20, 20] : k === "gas" ? [255, 235, 225] : [255, 255, 255], thr = k === "gas" ? .58 : k === "lava" ? .56 : .5;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const v = y / H, c = fbm(x / W, v * (k === "gas" ? .4 : 1)), a = clamp((c - thr) * 3.4, 0, 1) * (1 - Math.pow(Math.abs(v - .5) * 2, 6));
+    const i = (y * W + x) * 4; img.data[i] = tint[0]; img.data[i + 1] = tint[1]; img.data[i + 2] = tint[2]; img.data[i + 3] = a * 235;
+  }
+  g.putImageData(img, 0, 0); return TEXHI[key] = cv.toDataURL("image/png");
+}
+function texture(pid, hi) {
+  if (hi) { if (TEXHI[pid]) return TEXHI[pid]; } else if (TEX[pid]) return TEX[pid];
+  if (!hi) { clearTimeout(texSaveT); texSaveT = setTimeout(() => { try { localStorage.setItem(TEXV, JSON.stringify(TEX)); } catch (e) { } }, 2000); }
+  const L = LOOK[pid], W = hi ? 512 : 256, H = W / 2, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const cx = cv.getContext("2d"), img = cx.createImageData(W, H), r = rng(hash(pid)), n = vnoise(r), n2 = vnoise(r);
   const C = L.c.map(hex2rgb);
   // tileable horizontally: sample on a cylinder
-  const fbm = (u, v, oct, f) => { let a = 0, amp = .5, fr = f; for (let o = 0; o < oct; o++) { const ang = u * Math.PI * 2, R = fr * 1.6; a += amp * n(Math.cos(ang) * R + 32, Math.sin(ang) * R + 32 + v * fr * 3.2); amp *= .5; fr *= 2; } return a; };
+  const fbm = (u, v, oct, f) => { if (hi) oct += 1; let a = 0, amp = .5, fr = f; for (let o = 0; o < oct; o++) { const ang = u * Math.PI * 2, R = fr * 1.6; a += amp * n(Math.cos(ang) * R + 32, Math.sin(ang) * R + 32 + v * fr * 3.2); amp *= .5; fr *= 2; } return a; };
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const u = x / W, v = y / H, lat = Math.abs(v - .5) * 2; let col;
     const e = fbm(u, v, 5, 1.6);
@@ -302,8 +316,8 @@ function texture(pid) {
         break;
       }
       case "city": {
-        const blk = (Math.floor(x / 3) * 7 + Math.floor(y / 3) * 13) % 5 === 0;
-        col = ramp([C[0], C[1]], e); const lights = n2(x * .9, y * .9) > .62 || (blk && e > .45);
+        const q = hi ? 2 : 1, xx = x / q, yy = y / q, blk = (Math.floor(xx / 3) * 7 + Math.floor(yy / 3) * 13) % 5 === 0;
+        col = ramp([C[0], C[1]], e); const lights = n2(xx * .9, yy * .9) > .62 || (blk && e > .45);
         if (lights) col = mix(col, C[2], .55 + r() * .4); if (r() > .985) col = C[3];
         break;
       }
@@ -320,20 +334,25 @@ function texture(pid) {
     const i = (y * W + x) * 4; img.data[i] = col[0]; img.data[i + 1] = col[1]; img.data[i + 2] = col[2]; img.data[i + 3] = 255;
   }
   cx.putImageData(img, 0, 0);
-  return TEX[pid] = cv.toDataURL("image/jpeg", .86);
+  const url = cv.toDataURL("image/jpeg", hi ? .9 : .86);
+  return hi ? (TEXHI[pid] = url) : (TEX[pid] = url);
 }
 /* planet DOM: textured sphere + extras */
 function planetEl(pid, d, opts = {}) {
   const L = LOOK[pid];
   const wrap = h("div", { class: "pwrap", style: { position: "relative", width: d + "px", height: d + "px" } });
-  const pl = h("div", { class: "planet", "--d": d + "px", "--atm": L.atm, "--rot": (opts.fast ? L.rot / 3 : L.rot) + "s" }, h("div", { class: "tex", style: { backgroundImage: `url(${texture(pid)})` } }));
-  if (pid === "bespin") {
+  const cl = opts.hi ? clouds(pid) : null;
+  const pl = h("div", { class: "planet" + (opts.hi ? " planet--hi" : ""), "--d": d + "px", "--atm": L.atm, "--rot": (opts.fast ? L.rot / 3 : L.rot) + "s" },
+    h("div", { class: "tex", style: { backgroundImage: `url(${texture(pid, opts.hi)})` } }),
+    cl ? h("div", { class: "clouds", style: { backgroundImage: `url(${cl})` } }) : null);
+  if (opts.hi) wrap.append(h("div", { class: "atmo", "aria-hidden": "true", style: { "--atm": L.atm } }));
+  if (pid === "bespin" && !opts.hi) {
     wrap.append(svgHTML(`<svg class="p-extra" viewBox="0 0 100 100" style="left:-35%;top:-35%;width:170%;height:170%"><ellipse cx="50" cy="50" rx="46" ry="11" fill="none" stroke="rgba(255,220,200,.35)" stroke-width="3" transform="rotate(-16 50 50)"/><ellipse cx="50" cy="50" rx="40" ry="9" fill="none" stroke="rgba(255,200,220,.25)" stroke-width="1.5" transform="rotate(-16 50 50)"/></svg>`));
   }
   wrap.append(pl);
-  if (pid === "tatooine") wrap.append(svgHTML(`<svg class="p-extra" viewBox="0 0 100 100" style="left:-80%;top:-70%;width:120%;height:120%"><circle cx="40" cy="40" r="9" fill="#fff4c8"/><circle cx="62" cy="30" r="6" fill="#ffd27a"/><circle cx="40" cy="40" r="18" fill="rgba(255,230,160,.25)"/><circle cx="62" cy="30" r="13" fill="rgba(255,200,120,.2)"/></svg>`));
-  if (pid === "endor") wrap.append(svgHTML(`<svg class="p-extra" viewBox="0 0 100 100" style="left:55%;top:-95%;width:130%;height:130%;z-index:-1"><defs><radialGradient id="gg" cx=".35" cy=".35"><stop offset="0" stop-color="#9fb4c8"/><stop offset=".7" stop-color="#4a5d7a"/><stop offset="1" stop-color="#1a2234"/></radialGradient></defs><circle cx="50" cy="50" r="38" fill="url(#gg)" opacity=".55"/></svg>`));
-  if (pid === "yavin") wrap.append(svgHTML(`<svg class="p-extra" viewBox="0 0 100 100" style="left:48%;top:-90%;width:140%;height:140%;z-index:-1"><defs><radialGradient id="yg" cx=".35" cy=".35"><stop offset="0" stop-color="#ffcf9a"/><stop offset=".7" stop-color="#c06a3a"/><stop offset="1" stop-color="#5a2a1a"/></radialGradient></defs><circle cx="50" cy="50" r="38" fill="url(#yg)" opacity=".55"/></svg>`));
+  if (pid === "tatooine" && !opts.hi) wrap.append(svgHTML(`<svg class="p-extra" viewBox="0 0 100 100" style="left:-80%;top:-70%;width:120%;height:120%"><circle cx="40" cy="40" r="9" fill="#fff4c8"/><circle cx="62" cy="30" r="6" fill="#ffd27a"/><circle cx="40" cy="40" r="18" fill="rgba(255,230,160,.25)"/><circle cx="62" cy="30" r="13" fill="rgba(255,200,120,.2)"/></svg>`));
+  if (pid === "endor" && !opts.hi) wrap.append(svgHTML(`<svg class="p-extra" viewBox="0 0 100 100" style="left:55%;top:-95%;width:130%;height:130%;z-index:-1"><defs><radialGradient id="gg" cx=".35" cy=".35"><stop offset="0" stop-color="#9fb4c8"/><stop offset=".7" stop-color="#4a5d7a"/><stop offset="1" stop-color="#1a2234"/></radialGradient></defs><circle cx="50" cy="50" r="38" fill="url(#gg)" opacity=".55"/></svg>`));
+  if (pid === "yavin" && !opts.hi) wrap.append(svgHTML(`<svg class="p-extra" viewBox="0 0 100 100" style="left:48%;top:-90%;width:140%;height:140%;z-index:-1"><defs><radialGradient id="yg" cx=".35" cy=".35"><stop offset="0" stop-color="#ffcf9a"/><stop offset=".7" stop-color="#c06a3a"/><stop offset="1" stop-color="#5a2a1a"/></radialGradient></defs><circle cx="50" cy="50" r="38" fill="url(#yg)" opacity=".55"/></svg>`));
   return wrap;
 }
 

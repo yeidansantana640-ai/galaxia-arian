@@ -93,3 +93,46 @@ function welcomeBack() {
   if (lr && lr.name && lr.name !== "map" && (lr.name !== "planet" || planetUnlocked(lr.params.id))) { route = { name: lr.name, params: lr.params || {} }; try { history.replaceState(route, ""); } catch (e) { } }
   return true;
 }
+
+/* ---------- the finale: cinematic sequence before the last holocron ---------- */
+function playFinale(done) {
+  stopAmbience(); closeModals();
+  const cv = h("canvas"), stage = h("div", { class: "fin-stage" });
+  const el = h("div", { class: "finale", role: "dialog", "aria-label": "El final del viaje" }, cv, stage,
+    h("button", { class: "i-skip fin-skip", onclick: () => end() }, "Saltar"));
+  document.body.append(el); starfield(cv); document.body.classList.add("hide-droid");
+  let tms = [], ended = false;
+  const at = (ms, f) => tms.push(setTimeout(f, ms));
+  const end = () => { if (ended) return; ended = true; tms.forEach(clearTimeout); el.classList.add("out"); setTimeout(() => { el.remove(); done && done(); }, 700); };
+  const show = node => { stage.replaceChildren(node); };
+  const missionsDone = ORDER.flatMap(p => MISSIONS[p]).filter(m => flag(m.flag)).length, total = ORDER.flatMap(p => MISSIONS[p]).length;
+  // 1 · incoming transmission
+  show(h("div", { class: "fin-block" }, h("div", { class: "fin-rings" }, h("i"), h("i"), h("i")), h("p", { class: "i-meta", style: { animationDelay: ".2s" } }, "Transmisión final entrante"), h("p", { class: "i-line", style: { animationDelay: ".9s" } }, `${herName()}, has recorrido toda la galaxia.`)));
+  SFX.holo();
+  // 2 · the twelve planets align
+  at(4200, () => {
+    const R = Math.min(innerWidth, innerHeight) * .36, cx = 0, cy = 0;
+    const pts = ORDER.map((pid, i) => { const a = -Math.PI / 2 + i / ORDER.length * Math.PI * 2; return [Math.cos(a) * R, Math.sin(a) * R]; });
+    const sv = s("svg", { class: "fin-lines", viewBox: `${-R - 40} ${-R - 40} ${2 * R + 80} ${2 * R + 80}` }, s("polyline", { points: [...pts, pts[0]].map(p => p.join(",")).join(" "), fill: "none", stroke: "#ffd98a", "stroke-width": 2, "stroke-linejoin": "round" }));
+    const ring = h("div", { class: "fin-ring", style: { width: 2 * R + 80 + "px", height: 2 * R + 80 + "px" } }, sv,
+      ORDER.map((pid, i) => h("div", { class: "fin-p", style: { left: `calc(50% + ${pts[i][0]}px)`, top: `calc(50% + ${pts[i][1]}px)`, animationDelay: (i * .28) + "s" } }, planetEl(pid, Math.max(34, R * .2), { revealed: true }), h("small", null, P[pid].name))),
+      h("div", { class: "fin-center" }, h("b", null, "12"), h("span", null, "planetas")));
+    show(ring);
+    ORDER.forEach((_, i) => at(4200 + i * 280, () => SFX.note(392 + i * 40)));
+  });
+  // 3 · the numbers of the journey
+  at(10200, () => {
+    const stat = (n, l) => { const b = h("b", null, "0"); const t0 = performance.now(); (function f(t) { const k = Math.min(1, (t - t0) / 1400); b.textContent = Math.round(n * (1 - Math.pow(1 - k, 3))); if (k < 1 && (b.isConnected || t - t0 < 300)) requestAnimationFrame(f); })(t0); return h("div", { class: "fin-stat" }, b, h("span", null, l)); };
+    show(h("div", { class: "fin-block" }, h("p", { class: "i-meta" }, "Registro del viaje"),
+      h("div", { class: "fin-stats" }, stat(readCount(), "cartas leídas"), stat(missionsDone, `de ${total} misiones`), stat(daysSince(), "días desde el 21 de junio")),
+      h("p", { class: "i-line", style: { animationDelay: "1.6s" } }, "Solo queda un holocrón por abrir.")));
+    SFX.select();
+  });
+  // 4 · the holocron opens
+  at(15600, () => {
+    show(h("div", { class: "fin-block" }, h("div", { class: "cube fin-cube" }, h("div", { class: "cube-in" }, [1, 2, 3, 4, 5, 6].map(() => h("i")))), h("p", { class: "i-line i-gold", style: { animationDelay: ".6s" } }, "El último holocrón")));
+    SFX.saber(); fanfare();
+  });
+  at(19200, () => { stage.querySelector(".cube") && stage.querySelector(".cube").classList.add("opening"); celebrate(); });
+  at(20600, () => { const f = $(".flash") || h("div", { class: "flash" }); if (!f.isConnected) document.body.append(f); f.removeAttribute("data-on"); void f.offsetWidth; f.setAttribute("data-on", ""); end(); });
+}

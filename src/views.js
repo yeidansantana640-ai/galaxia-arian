@@ -81,8 +81,9 @@ function letterCard(l, un) {
 /* ================= letter reader ================= */
 let readerEl = null;
 function closeReader() { if (readerEl) { readerEl.remove(); readerEl = null; document.body.classList.toggle("hide-droid", !["map", "planet"].includes(route.name)); rerender(); } }
-function openLetter(id, fromList) {
+function openLetter(id, fromList, noFinale) {
   const l = LBYID[id]; if (!l || !letterUnlocked(l)) return;
+  if (id === "c57" && !noFinale && !S.readLetters.includes(id)) { closeModals(); closeReader(); return playFinale(() => openLetter(id, fromList, true)); }
   closeModals(); closeReader(); toastBox && toastBox.replaceChildren();
   const K = kindOf(l), firstTime = !S.readLetters.includes(id);
   const sib = (fromList || lettersOf(l.planet)).filter(x => letterUnlocked(x)), idx = sib.findIndex(x => x.id === id);
@@ -123,6 +124,41 @@ function openLetter(id, fromList) {
   markRead(id);
 }
 
+/* ================= cinematic planet header ================= */
+const moon = (x, y, r, c = "#cfd6e2", dur = 60) => `<div class="cine-moon" style="left:${x}%;top:${y}%;width:${r}px;height:${r}px;--mc:${c};animation-duration:${dur}s"></div>`;
+const CINE_X = {
+  naboo: () => moon(80, 14, 34, "#e8eef4", 90) + moon(14, 30, 14, "#b8c4d0", 70),
+  tatooine: () => `<div class="cine-sun" style="left:16%;top:12%;--s:58px;--c:#fff4c8"></div><div class="cine-sun" style="left:30%;top:20%;--s:38px;--c:#ffc46b"></div>`,
+  coruscant: () => `<div class="cine-traffic">${Array.from({ length: 14 }, (_, i) => `<i style="top:${30 + (i * 37) % 40}%;animation-duration:${7 + (i * 5) % 9}s;animation-delay:-${(i * 3) % 11}s"></i>`).join("")}</div>`,
+  hoth: () => moon(78, 12, 40, "#dfe8f4", 120) + moon(18, 22, 22, "#a8b8cc", 80) + moon(66, 34, 10, "#c8d4e4", 60),
+  bespin: () => "",
+  endor: () => `<div class="cine-giant" style="right:-12%;top:-6%;--s:min(62vw,340px);--a:#9fb4c8;--b:#3a4d6a"></div>`,
+  dagobah: () => `<div class="cine-mist"></div><div class="cine-mist" style="top:46%;animation-duration:70s;opacity:.35"></div>` + moon(82, 16, 18, "#b8c8b0", 90),
+  alderaan: () => moon(20, 14, 30, "#eef2f8", 100),
+  kashyyyk: () => moon(84, 12, 26, "#d8e8d8", 80) + moon(70, 26, 12, "#b8c8b8", 60),
+  "ahch-to": () => moon(18, 10, 44, "#e8eef8", 140),
+  mustafar: () => `<div class="cine-sun" style="left:76%;top:10%;--s:30px;--c:#ff9a5a"></div>`,
+  yavin: () => `<div class="cine-giant" style="right:-16%;top:-10%;--s:min(70vw,400px);--a:#ffcf9a;--b:#a0502a;--band:1"></div>`,
+};
+function cineHero(id) {
+  const p = P[id], L = LOOK[id], D = Math.round(clamp(innerWidth * 1.18, 520, LITE() ? 700 : 980));
+  const pw = h("div", { class: "cine-planet", style: { width: D + "px", height: D + "px", marginLeft: -D / 2 + "px" } });
+  if (id === "bespin") pw.append(svgHTML(`<svg class="cine-ring back" viewBox="0 0 200 200"><g transform="rotate(-22 100 100)"><ellipse cx="100" cy="100" rx="96" ry="26" fill="none" stroke="rgba(255,220,205,.5)" stroke-width="7"/><ellipse cx="100" cy="100" rx="82" ry="22" fill="none" stroke="rgba(255,190,215,.32)" stroke-width="4"/></g></svg>`));
+  pw.append(planetEl(id, D, { revealed: true, hi: true }));
+  if (id === "bespin") pw.append(svgHTML(`<svg class="cine-ring front" viewBox="0 0 200 200"><g transform="rotate(-22 100 100)"><path d="M4 100 A96 26 0 0 0 196 100" fill="none" stroke="rgba(255,225,210,.75)" stroke-width="7"/><path d="M18 100 A82 22 0 0 0 182 100" fill="none" stroke="rgba(255,190,215,.5)" stroke-width="4"/></g></svg>`));
+  const title = h("h1", { class: "cine-title", "aria-label": p.name }, [...p.name].map((c, i) => h("span", { style: { animationDelay: (.25 + i * .07) + "s" } }, c === " " ? "\u00a0" : c)));
+  const sec = h("section", { class: "pv-cine", style: { "--atm": L.atm } },
+    h("div", { class: "cine-glow" }),
+    h("div", { class: "cine-x", html: (CINE_X[id] || (() => ""))() }),
+    h("div", { class: "cine-ship", html: `<svg viewBox="-30 -18 60 36" width="54" height="32"><path d="M-22 0 L18 -2 L24 0 L18 2Z" fill="#dfe6ef"/><path d="M-6 -2 L-16 -14 L-12 -14 L2 -2Z M-6 2 L-16 14 L-12 14 L2 2Z" fill="#c8d0dc"/><circle cx="-24" cy="0" r="3" fill="#ff8a5c"/><circle cx="-24" cy="0" r="7" fill="#ff8a5c" opacity=".35"/></svg>` }),
+    pw,
+    h("div", { class: "cine-text" }, h("div", { class: "eyebrow" }, `${ORDER.indexOf(id) + 1} de 12 · ${LAYOUT[id].sector}`), title, h("div", { class: "tag" }, p.tagline)));
+  // gentle parallax while scrolling
+  const onScroll = () => { if (!sec.isConnected) return removeEventListener("scroll", onScroll); const y = Math.min(scrollY, 600); pw.style.transform = `translateY(${y * .35}px)`; sec.querySelector(".cine-text").style.opacity = 1 - y / 420; };
+  addEventListener("scroll", onScroll, { passive: true });
+  return sec;
+}
+
 /* ================= planet view ================= */
 function viewPlanet({ id }) {
   const p = P[id]; if (!p || !planetUnlocked(id)) return viewPlanets();
@@ -135,11 +171,10 @@ function viewPlanet({ id }) {
     ambientLayer(id),
     h("div", { class: "pv-inner" },
       h("div", { class: "ptop" }, h("button", { class: "back", onclick: () => go("map") }, svgHTML(ICON.back), "Mapa galáctico"), h("div", { class: "grow" }), h("span", { class: "chip" }, LAYOUT[id].region)),
-      h("section", { class: "pv-hero" },
-        h("div", { class: "big" }, planetEl(id, Math.min(innerWidth * .46, 190), { revealed: true })),
-        h("div", { class: "eyebrow" }, LAYOUT[id].sector),
-        h("h1", null, p.name), h("div", { class: "tag" }, p.tagline), h("p", { class: "desc" }, p.description),
-        h("div", { class: "pv-stats" }, sub.map(t => h("span", { class: "chip chip--accent" }, t)), md === ms.length && ms.length ? h("span", { class: "chip chip--ok" }, "Planeta completado") : null)),
+      cineHero(id),
+      h("section", { class: "pv-info holo" },
+        h("p", { class: "desc" }, p.description),
+        h("div", { class: "pv-stats" }, sub.map(t => h("span", { class: "chip chip--accent" }, t)), md === ms.length && ms.length ? h("span", { class: "chip chip--ok" }, "Planeta completado ✓") : null)),
       effs.length ? h("div", { style: { display: "grid", gap: "8px" } }, effs.map(e => h("div", { class: "effect" }, h("div", { class: "ic" }, e.effect.kind === "transmission" ? "📡" : e.effect.kind === "hint" ? "🧭" : "✨"), h("div", null, h("b", null, e.effect.title), h("span", null, e.effect.body))))) : null,
       h("div", { class: "howto" }, h("b", null, md === ms.length ? "¡Planeta completado!" : "Cómo funciona este planeta"),
         h("span", null, md === ms.length ? "Ya has hecho todas sus misiones. Puedes releer sus cartas abajo o seguir el viaje." : "Juega las misiones de abajo, empezando por la marcada. Cada misión completada abre cartas nuevas, que aparecen más abajo en «Cartas de este planeta»."),
@@ -242,7 +277,7 @@ function viewSecrets() {
     h("div", { class: "section-t" }, "Holocrones"),
     h("div", { class: "lcards" }, secrets.map(l => letterCard(l, un))),
     h("div", { class: "section-t" }, "El último holocrón"),
-    (() => { const rc = readCount(), fin = LBYID.c57, ok = un.has("c57"); return h("div", { class: "secret-row" }, h("div", { class: "kind-ic", style: { width: "44px" } }, kindIcon(fin, !ok)), h("div", { class: "grow" }, h("b", null, ok ? fin.title : "Un holocrón sellado en Yavin 4"), h("span", null, ok ? "Ya puedes abrirlo." : `Se abre al leer las otras 56 cartas (llevas ${Math.min(rc, 56)}).`)), ok ? h("button", { class: "btn btn--sm btn--gold", onclick: () => openLetter("c57") }, "Abrir") : null); })(),
+    (() => { const rc = readCount(), fin = LBYID.c57, ok = un.has("c57"); return h("div", { class: "secret-row" }, h("div", { class: "kind-ic", style: { width: "44px" } }, kindIcon(fin, !ok)), h("div", { class: "grow" }, h("b", null, ok ? fin.title : "Un holocrón sellado en Yavin 4"), h("span", null, ok ? "Ya puedes abrirlo." : `Se abre al leer las otras 56 cartas (llevas ${Math.min(rc, 56)}).`)), ok ? h("div", { style: { display: "grid", gap: "6px" } }, h("button", { class: "btn btn--sm btn--gold", onclick: () => openLetter("c57") }, "Abrir"), S.readLetters.includes("c57") ? h("button", { class: "btn btn--sm btn--ghost", onclick: () => playFinale(() => openLetter("c57", null, true)) }, "▶ Ver el final") : null) : null); })(),
     h("div", { class: "bar" }, h("i", { style: { width: Math.min(100, readCount() / 56 * 100) + "%" } })),
     h("div", { class: "section-t" }, "Pistas del droide"),
     pending.length ? h("div", { style: { display: "grid", gap: "8px" } }, pending.slice(0, 8).map(m => h("button", { class: "secret-row", style: { textAlign: "left", cursor: "pointer", color: "inherit", font: "inherit" }, onclick: () => go("planet", { id: m.pid }) }, h("div", { style: { fontSize: "22px" } }, m.ic), h("div", { class: "grow" }, h("b", null, m.t), h("span", null, P[m.pid].name + (missionAvailable(m) ? "" : " · 🔒 " + m.reqText))), h("span", { class: "muted" }, "›"))),
