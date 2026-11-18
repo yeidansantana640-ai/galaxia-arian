@@ -890,3 +890,18 @@ html[data-wipe=clock]::view-transition-new(root){animation:wipe-clock .7s linear
 .pd small{font-size:11px;color:var(--ink3)}
 .pd.f small{color:var(--gold)}
 .lite .porg--flock{animation:none}
+/* porg breeds */
+.porg-svg{overflow:visible}
+.p-shiver .porg-body{animation:shiver .18s linear infinite!important}
+@keyframes shiver{0%,100%{transform:translateX(-.8px)}50%{transform:translateX(.8px)}}
+.p-float .porg-body{animation:pfloat 3s ease-in-out infinite!important}
+@keyframes pfloat{50%{transform:translateY(-6px)}}
+.p-wise .porg-eyes{animation:wiseblink 4s ease-in-out infinite!important}
+@keyframes wiseblink{0%,100%{transform:scaleY(.55)}50%{transform:scaleY(1)}}
+.p-glow{filter:drop-shadow(0 0 6px rgba(255,120,60,.7))}
+.pembers circle,.plights circle{animation:twk 1.6s ease-in-out infinite}
+.porg-stage{display:grid;place-items:center;height:210px;border-radius:20px;background:radial-gradient(ellipse at 50% 90%,hsl(var(--accent-h) 90% 60% / .3),transparent 60%),linear-gradient(180deg,#0b1030,#05071a);border:1px solid hsl(var(--accent-h) 100% 70% / .3)}
+.porg-stage .porg{position:relative;transform:none;left:auto;bottom:auto}
+.porg-stage.locked svg{filter:brightness(0) opacity(.4)}
+.pd{cursor:pointer;color:inherit;font:inherit}
+.pd:active{transform:scale(.95)}

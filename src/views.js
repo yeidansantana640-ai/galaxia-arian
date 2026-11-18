@@ -138,6 +138,14 @@ function openLetter(id, fromList, noFinale) {
   markRead(id);
 }
 
+function porgCard(pid) {
+  const f = porgsFound().includes(pid), B = PORG[pid];
+  modal(h("div", null, h("div", { class: "eyebrow" }, `Guía de porgs · ${ORDER.indexOf(pid) + 1} de 12`), h("h2", null, f ? B.n : "Raza sin descubrir")), [
+    h("div", { class: "porg-stage" + (f ? "" : " locked") }, h("div", { class: "porg porg--show" }, porgEl(150, pid))),
+    f ? h("p", { class: "m-quote", style: { fontSize: "1.2rem" } }, B.d) : h("p", { class: "m-note", style: { textAlign: "center" } }, `Esta raza vive en ${P[pid].name}. Busca en la portada del planeta: a veces asoma la cabeza.`),
+    h("div", { class: "m-row" }, h("span", { class: "chip chip--accent" }, "Hogar: " + P[pid].name), f ? h("button", { class: "btn btn--sm", onclick: () => porgSqueak() }, "🔊 Escuchar") : h("button", { class: "btn btn--sm btn--primary", onclick: () => { closeModals(); go("planet", { id: pid }); } }, `Ir a ${P[pid].name}`)),
+  ], null, "🐧");
+}
 /* ================= cinematic planet header ================= */
 const moon = (x, y, r, c = "#cfd6e2", dur = 60) => `<div class="cine-moon" style="left:${x}%;top:${y}%;width:${r}px;height:${r}px;--mc:${c};animation-duration:${dur}s"></div>`;
 const CINE_X = {
@@ -175,13 +183,13 @@ function cineHero(id) {
   });
   if (!porgsFound().includes(id)) {
     const r = hash(id + "porg"), x = 8 + r % 70, look = r % 3;
-    const hp = h("button", { class: "porg porg--hide", "aria-label": "¡Algo se mueve! Un porg escondido", style: { left: x + "%", bottom: (12 + (r >> 4) % 14) + "%" } }, porgEl(46, look));
+    const hp = h("button", { class: "porg porg--hide", "aria-label": "¡Algo se mueve! Un porg escondido", style: { left: x + "%", bottom: (12 + (r >> 4) % 14) + "%" } }, porgEl(50, id));
     hp.onclick = () => {
       if (porgsFound().includes(id)) return;
       porgSqueak(); setData("porgs", [...porgsFound(), id]); dset({ cred: dget().cred + 2 });
       hp.classList.add("caught"); setTimeout(() => hp.remove(), 1200);
       const n = porgsFound().length;
-      toast("🐧", n === 12 ? "¡Has encontrado los 12 porgs!" : `¡Porg encontrado! ${n} de 12`, n === 12 ? "Eres oficialmente amiga de los porgs. +2 chispas" : "Hay uno escondido en cada planeta. +2 chispas");
+      toast("🐧", n === 12 ? "¡Has encontrado los 12 porgs!" : `¡${PORG[id].n}! ${n} de 12`, n === 12 ? "Eres oficialmente amiga de los porgs. +2 chispas" : `${PORG[id].d} +2 chispas`, () => porgCard(id));
       if (n === 12) celebrate();
     };
     sec.append(hp);
@@ -303,9 +311,9 @@ function viewSecrets() {
   return page("Secretos por descubrir", ["Templos Jedi", "Holocrones escondidos, logros con premio y el último holocrón del viaje."],
     h("div", { class: "summary holo" }, h("div", { class: "kind-ic", style: { width: "56px", flex: "none" } }, kindIcon(LBYID["c57"], false)),
       h("div", { class: "grow" }, h("b", null, `${sGot} de ${secrets.length} holocrones abiertos`), h("span", null, `${locked.length} cartas cifradas · ${pending.length} misiones pendientes`))),
-    h("div", { class: "section-t" }, `Porgs escondidos · ${porgsFound().length} de 12`),
-    h("p", { class: "muted", style: { margin: 0, fontSize: "13.5px" } }, "Hay un porg escondido en la portada de cada planeta. Búscalo y tócalo."),
-    h("div", { class: "porg-dex" }, ORDER.map(pid => { const f = porgsFound().includes(pid); return h("div", { class: "pd" + (f ? " f" : "") }, porgEl(40, hash(pid + "porg") % 3), h("small", null, f ? P[pid].name : "¿?")); })),
+    h("div", { class: "section-t" }, `Guía de porgs · ${porgsFound().length} de 12 razas`),
+    h("p", { class: "muted", style: { margin: 0, fontSize: "13.5px" } }, "Cada planeta tiene su propia raza de porg, escondida en su portada. Búscalos y tócalos para añadirlos a la guía."),
+    h("div", { class: "porg-dex" }, ORDER.map(pid => { const f = porgsFound().includes(pid); return h("button", { class: "pd" + (f ? " f" : ""), onclick: () => porgCard(pid) }, porgEl(46, pid), h("small", null, f ? PORG[pid].n.replace("Porg ", "") : P[pid].name)); })),
     h("div", { class: "section-t" }, "Logros"),
     h("p", { class: "muted", style: { margin: 0, fontSize: "13.5px" } }, `Cada logro reclamado da chispas para los accesorios de ${droidName()}.`),
     achievementsView(),

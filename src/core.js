@@ -402,17 +402,47 @@ function celebrate(kind = "gold") {
 }
 
 /* ================= PORGS (original drawing) ================= */
+const PORG = {
+  naboo: { n: "Porg de los lagos", d: "Plumas color lago y una flor detrás de la oreja. Le encanta mirar el agua.", body: "#5a8fa8", mark: "#e8a0c0", x: "flor" },
+  tatooine: { n: "Porg del desierto", d: "Color arena, con gafas para las tormentas de los dos soles.", body: "#c8a06a", mark: "#8a5a2e", x: "gafas" },
+  coruscant: { n: "Porg de ciudad", d: "Morado noche, con lucecitas en las plumas como los rascacielos.", body: "#4a3a6a", mark: "#ffd27a", x: "luces", anim: "lights" },
+  hoth: { n: "Porg de las nieves", d: "Blanquísimo y esponjoso. Siempre lleva bufanda y aun así tirita.", body: "#e6eef6", belly: "#ffffff", mark: "#9ac0e0", x: "bufanda", anim: "shiver" },
+  bespin: { n: "Porg de las nubes", d: "Rosa algodón. Es tan ligero que casi flota.", body: "#e8a8c0", mark: "#fff0f6", x: "nubes", anim: "float" },
+  endor: { n: "Porg del bosque", d: "Marrón musgo, con una hoja de gorro. Amigo de las luciérnagas.", body: "#6a5a3a", mark: "#9bd37a", x: "hoja" },
+  dagobah: { n: "Porg del pantano", d: "Verde ciénaga y muy sabio. Habla poco, pero mira mucho.", body: "#5a6a48", mark: "#a8c890", x: "musgo", anim: "wise" },
+  alderaan: { n: "Porg real", d: "Azul cielo y blanco, con una pequeña corona de plumas.", body: "#8ab0d8", mark: "#ffd98a", x: "corona" },
+  kashyyyk: { n: "Porg wookiee", d: "Peludo y castaño. Da los abrazos más fuertes de la galaxia.", body: "#7a5030", mark: "#c89060", x: "pelo" },
+  "ahch-to": { n: "Porg de la isla", d: "El porg clásico: curioso, ruidoso y adorable. Vive en bandadas.", body: "#8b7a68", mark: "#c8763a" },
+  mustafar: { n: "Porg de lava", d: "Gris carbón con plumas que brillan como ascuas. Tranquila: no quema.", body: "#3a3030", mark: "#ff7a3d", x: "ascuas", anim: "glow" },
+  yavin: { n: "Porg de la selva", d: "Verde selva con un penacho naranja, como el gigante gaseoso del cielo.", body: "#3a7a4a", mark: "#ff9a5a", x: "penacho" },
+};
+const PORG_X = {
+  flor: c => `<g transform="translate(44 12)"><circle r="3" fill="${c}"/><circle cx="-3" cy="-2" r="2.6" fill="${c}"/><circle cx="3" cy="-2" r="2.6" fill="${c}"/><circle cx="0" cy="-4" r="2.6" fill="${c}"/><circle r="1.6" fill="#ffd166"/></g>`,
+  gafas: () => `<g><rect x="15" y="12" width="12" height="7" rx="3.5" fill="#3a2a1a"/><rect x="33" y="12" width="12" height="7" rx="3.5" fill="#3a2a1a"/><rect x="17" y="13.5" width="8" height="4" rx="2" fill="#9fd8ff"/><rect x="35" y="13.5" width="8" height="4" rx="2" fill="#9fd8ff"/><path d="M27 15.5h6M10 16h5M45 16h5" stroke="#3a2a1a" stroke-width="1.6"/></g>`,
+  luces: c => `<g class="plights">${[[16, 38], [44, 40], [12, 30], [48, 30], [30, 50]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="1.5" fill="${c}" style="animation-delay:${i * .3}s"/>`).join("")}</g>`,
+  bufanda: () => `<g><path d="M12 33 Q30 40 48 33 L48 38 Q30 45 12 38Z" fill="#d84a4a"/><path d="M40 37 l4 12 l5 -1 l-3 -11z" fill="#c83a3a"/><path d="M14 35 h3 M20 37 h3 M26 38 h3 M32 38 h3 M38 37 h3" stroke="#fff" stroke-width="1" opacity=".7"/></g>`,
+  nubes: () => `<g fill="#fff" opacity=".9"><ellipse cx="9" cy="48" rx="7" ry="4"/><ellipse cx="52" cy="46" rx="6" ry="3.5"/></g>`,
+  hoja: c => `<path d="M22 10 Q30 -4 44 8 Q36 12 22 10Z" fill="${c}" stroke="#4a7a3a" stroke-width="1"/><path d="M24 9.5 Q33 5 42 8" stroke="#4a7a3a" stroke-width=".8" fill="none"/>`,
+  musgo: c => `<g fill="${c}"><circle cx="24" cy="12" r="3.4"/><circle cx="29" cy="10" r="3.8"/><circle cx="35" cy="12" r="3.2"/></g>`,
+  corona: c => `<path d="M20 14 L22 5 L26 11 L30 3 L34 11 L38 5 L40 14Z" fill="${c}" stroke="#b8862a" stroke-width=".8"/>`,
+  pelo: c => `<g stroke="${c}" stroke-width="2" stroke-linecap="round" fill="none"><path d="M22 12 l-2 -6 M28 10 l0 -7 M34 10 l1 -7 M39 12 l3 -6"/><path d="M11 40 l-4 2 M49 40 l4 2 M13 46 l-4 3 M47 46 l4 3"/></g>`,
+  ascuas: c => `<g class="pembers">${[[14, 28], [46, 30], [20, 46], [42, 48], [30, 14]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="1.7" fill="${c}" style="animation-delay:${i * .35}s"/>`).join("")}</g>`,
+  penacho: c => `<g fill="${c}"><path d="M30 12 Q24 -2 28 -4 Q30 4 30 12Z"/><path d="M30 12 Q32 -4 37 -2 Q33 4 30 12Z"/><path d="M30 12 Q20 2 22 -1 Q27 5 30 12Z"/></g>`,
+};
 function porgMarkup(look = 0) {
-  const tones = [["#8b7a68", "#c8763a"], ["#7a6c5e", "#d8894a"], ["#9a8876", "#b8683a"]][look % 3];
-  return `<g class="porg-body"><ellipse cx="30" cy="54" rx="13" ry="2.4" fill="rgba(0,0,0,.3)"/>
+  const B = typeof look === "string" ? (PORG[look] || PORG["ahch-to"]) : null;
+  const tones = B ? [B.body, B.mark] : [["#8b7a68", "#c8763a"], ["#7a6c5e", "#d8894a"], ["#9a8876", "#b8683a"]][look % 3];
+  const belly = (B && B.belly) || "#f6f1e8", extra = B && B.x ? PORG_X[B.x](B.mark) : "";
+  const back = B && (B.x === "nubes") ? extra : "", front = B && B.x !== "nubes" ? extra : "";
+  return `<g class="porg-body">${back}<ellipse cx="30" cy="54" rx="13" ry="2.4" fill="rgba(0,0,0,.3)"/>
   <ellipse class="flip l" cx="10" cy="36" rx="5" ry="10" fill="${tones[0]}" transform="rotate(20 10 36)"/><ellipse class="flip r" cx="50" cy="36" rx="5" ry="10" fill="${tones[0]}" transform="rotate(-20 50 36)"/>
-  <ellipse cx="30" cy="34" rx="21" ry="20" fill="${tones[0]}"/><ellipse cx="30" cy="40" rx="14.5" ry="13.5" fill="#f6f1e8"/>
+  <ellipse cx="30" cy="34" rx="21" ry="20" fill="${tones[0]}"/><ellipse cx="30" cy="40" rx="14.5" ry="13.5" fill="${belly}"/>
   <path d="M14 26 Q30 8 46 26 Q46 36 30 36 Q14 36 14 26Z" fill="#f8f4ec"/>
   <path d="M15 22 Q22 14 28 20 M45 22 Q38 14 32 20" stroke="${tones[1]}" stroke-width="3" fill="none" stroke-linecap="round"/>
   <g class="porg-eyes"><ellipse cx="22.5" cy="25" rx="5.4" ry="6.2" fill="#1a1410"/><ellipse cx="37.5" cy="25" rx="5.4" ry="6.2" fill="#1a1410"/><circle cx="24" cy="23" r="1.8" fill="#fff"/><circle cx="39" cy="23" r="1.8" fill="#fff"/></g>
   <path d="M27.6 29.5 L32.4 29.5 L30 33Z" fill="#e8913a"/>
-  <ellipse cx="24" cy="54" rx="3.4" ry="1.6" fill="#e8913a"/><ellipse cx="36" cy="54" rx="3.4" ry="1.6" fill="#e8913a"/></g>`;
+  <ellipse cx="24" cy="54" rx="3.4" ry="1.6" fill="#e8913a"/><ellipse cx="36" cy="54" rx="3.4" ry="1.6" fill="#e8913a"/>${front}</g>`;
 }
-function porgEl(size = 48, look = 0, cls = "") { return svgHTML(`<svg class="porg-svg ${cls}" viewBox="0 0 60 58" width="${size}" height="${size * 58 / 60}">${porgMarkup(look)}</svg>`); }
+function porgEl(size = 48, look = 0, cls = "") { const a = typeof look === "string" && PORG[look] && PORG[look].anim; return svgHTML(`<svg class="porg-svg ${cls}${a ? " p-" + a : ""}" viewBox="-6 -8 72 66" width="${size}" height="${size * 66 / 72}">${porgMarkup(look)}</svg>`); }
 function porgSqueak() { const r = Math.random; tone([{ f: 1400 + r() * 300, to: 2100, d: .09, type: "triangle", g: .08 }, { f: 1900, start: .1, to: 1500, d: .12, type: "triangle", g: .07 }]); }
 const porgsFound = () => getData("porgs", []);
