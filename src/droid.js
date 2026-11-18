@@ -17,6 +17,7 @@ const ACC = Object.fromEntries(DATA2.acc.map(a => [a.id, a]));
 const RARITY = a => a.cost >= 40 ? ["Legendario", "#ffd98a"] : a.cost >= 18 ? ["Épico", "#c58bff"] : a.cost >= 8 ? ["Raro", "#7fd6ff"] : ["Común", "#b7c3dd"];
 function dget() { return { ...DROID_DEF, ...(S.data.droid || {}) }; }
 function dset(patch) { const d = { ...dget(), ...patch }; setData("droid", d); return d; }
+function dsetQuiet(patch) { const d = { ...dget(), ...patch }; setDataQuiet("droid", d); return d; }
 const dLevel = d => Math.min(10, 1 + Math.floor((d || dget()).xp / 15));
 function dMood(d) { d = d || dget(); const avg = (d.energy + d.clean + d.repair) / 3; return avg < 40 ? "sleepy" : avg > 85 ? "celebrate" : (hash(today()) % 2 ? "happy" : "curious"); }
 function dTick() { // gentle decay since last visit, never below 25
@@ -113,9 +114,6 @@ function achievements() {
     ["droide-7", "Colección completa de Orbi", "Encuentra los quince fragmentos. Orbi aparece cuando quiere; no hay prisa.", 10, () => [d.fragments.length, 15]],
   ];
   for (const [id, title, desc, reward, prog] of D) list.push({ id, group: "Tu droide", title, desc, reward, prog });
-  const pn = () => [getData("porgs", []).length];
-  for (const [id, title, desc, reward, t] of [["porgs-1", "Primer porg", "Encuentra tu primer porg escondido.", 2, 1], ["porgs-6", "Medio nido", "Encuentra seis porgs.", 5, 6], ["porgs-12", "Amiga de los porgs", "Encuentra los 12 porgs, uno en cada planeta.", 10, 12]])
-    list.push({ id, group: "Porgs", title, desc, reward, prog: () => [pn()[0], t] });
   for (const [id, title, desc, reward, t] of [["fauna-1", "Primer saludo", "Conoce a tu primer habitante de la galaxia.", 2, 1], ["fauna-12", "Diplomática galáctica", "Conoce a 12 habitantes distintos.", 5, 12], ["fauna-24", "Guía completa", "Conoce a todos los habitantes de los 12 planetas.", 10, FA.ALL.length]])
     list.push({ id, group: "Habitantes", title, desc, reward, prog: () => [getData("fauna", []).length, t] });
   const claimed = new Set(getData("missions", { claimed: [] }).claimed || []);
@@ -167,7 +165,7 @@ function orbiCard() {
     h("div", { class: "grow" }, h("b", null, "Orbi ha pasado rodando por aquí"), h("span", { class: "muted", style: { fontSize: "13px", display: "block" } }, "Una pequeña esfera con un mensaje dentro."), out,
       h("button", { class: "btn btn--sm btn--gold", style: { marginTop: "8px" }, onclick: e => {
         const dd = dget(); const idx = [...Array(DATA2.frags.length).keys()].find(k => !dd.fragments.includes(k));
-        if (idx == null) return; dset({ fragments: [...dd.fragments, idx], sphereOn: today(), cred: dd.cred + 3 });
+        if (idx == null) return; dsetQuiet({ fragments: [...dd.fragments, idx], sphereOn: today(), cred: dd.cred + 3 });
         out.textContent = DATA2.frags[idx] + "  (+3 chispas)"; out.style.display = ""; e.target.remove(); SFX.beep();
       } }, "Escuchar el mensaje")));
   return card;

@@ -51,7 +51,8 @@ const FA = (() => {
       { id: "cumbres", n: "Pueblo de las cumbres", d: "Gente pacífica y culta que ama la música, los jardines y las bibliotecas.", k: "species", cat: "raza", svg: () => S("cumbres"), say: ["Bienvenida a las montañas. Aquí el aire huele a flores.", "En Alderaan preferimos los libros a las batallas."] }],
     kashyyyk: [{ id: "peludo-alto", cat: "raza", n: "Gigante peludo", d: "Altísimos, fortísimos y leales hasta el final. Viven en ciudades dentro de los árboles.", k: "species", svg: () => S("tallfur"), say: ["¡Rrrrwaaagh! (Traducción aproximada: «¡Bienvenida, amiga!»)", "Te ha dado un abrazo. Casi no puedes respirar, pero es bonito."] },
       { id: "reparador", n: "Droide reparador", d: "Arregla las casas de los árboles. Le encanta el olor a madera.", k: "droid", svg: () => S("boxy", "#7a8a6a", "#ffd27a"), say: ["Tornillo apretado. Árbol feliz.", "Bip. He arreglado una ventana. Y he visto un pájaro."] }],
-    "ahch-to": [{ id: "guardiana", cat: "raza", n: "Guardiana de la isla", d: "Cuidan las cabañas de piedra de la isla desde hace generaciones. Muy trabajadoras y un poco gruñonas.", k: "species", svg: () => S("caretaker"), say: ["Hmpf. Limpia los pies antes de entrar a la cabaña.", "Los porgs otra vez en el tejado… Ay, ay."] },
+    "ahch-to": [{ id: "porg", cat: "fauna", n: "Porgs", d: "Aves pequeñas, curiosas y ruidosas que viven en bandadas en los acantilados de la isla. Solo viven aquí.", k: "species", flock: true, svg: () => porgMarkup("ahch-to"), say: ["¡Mrrrk! ¡Mrrrk! (Te está saludando. Muy fuerte.)", "Te mira con sus ojos enormes… y vuelve a chillar."] },
+      { id: "guardiana", cat: "raza", n: "Guardiana de la isla", d: "Cuidan las cabañas de piedra de la isla desde hace generaciones. Muy trabajadoras y un poco gruñonas.", k: "species", svg: () => S("caretaker"), say: ["Hmpf. Limpia los pies antes de entrar a la cabaña.", "Los porgs otra vez en el tejado… Ay, ay."] },
       { id: "astro-isla", n: "Astromecánico vigía", d: "Lleva años esperando en la orilla, vigilando el mar. Le encanta ver amanecer.", k: "droid", svg: () => S("astro", "#7a8aa8"), say: ["Bwiip… (Está contento: por fin una visita.)", "Bip-bup. (Dice que el atardecer de hoy ha sido de diez.)"] }],
     mustafar: [{ id: "minero", n: "Droide minero", d: "Resistente al calor, trabaja en las minas de lava. Debajo de tanto metal, es muy tierno.", k: "droid", svg: () => S("boxy", "#5a4a44", "#ff7a3d", "drill"), say: ["Temperatura: muchísima. Ánimo: bueno.", "Brrrrr-drrr. He encontrado una piedra que brilla. Para ti."] },
       { id: "salamandra", cat: "fauna", n: "Salamandra de lava", d: "Vive junto a los ríos de lava. Su cola brilla como una brasa.", k: "species", svg: () => S("salamander"), say: ["Fsssss. (Está tomando el sol. Bueno, la lava.)", "Brilla un poco más cuando está contenta."] },
@@ -74,19 +75,33 @@ function faunaCard(x) {
     h("div", { class: "m-row" }, h("span", { class: "chip chip--accent" }, x.k === "droid" ? "Droide" : "Especie"), h("span", { class: "chip" }, "Hogar: " + P[x.pid].name), f ? h("button", { class: "btn btn--sm", onclick: () => faunaSound(x) }, "🔊 Escuchar") : h("button", { class: "btn btn--sm btn--primary", onclick: () => { closeModals(); go("planet", { id: x.pid }); } }, `Ir a ${P[x.pid].name}`)),
   ], null, x.k === "droid" ? "🤖" : "🦎");
 }
-function faunaLayer(pid, sec) {
-  (FA.L[pid] || []).forEach((x, i) => {
-    const el = h("button", { class: "fauna fauna--walk" + (x.svg().includes("f-float") ? " fly" : ""), "aria-label": x.n, style: { left: (i ? 72 : 22) + "%", bottom: (x.svg().includes("f-float") ? 30 : 11 + i * 3) + "%", animationDelay: (-i * 4) + "s" } }, FA.svg(x, 62));
-    let n = 0, bub = null;
+function faunaLayer(pid, surf, D) {
+  const list = (FA.L[pid] || []).filter(x => !x.flock), n = list.length;
+  const spots = n === 3 ? [-30, 3, 31] : n === 2 ? [-24, 24] : [0];
+  const people = list.map((x, i) => ({ x, a: pid === "ahch-to" ? [-6, 24][i] : spots[i] }));
+  if (pid === "ahch-to") [-36, -25, -15, 34, 41].forEach((a, i) => people.push({ x: FA.L["ahch-to"][0], a, porg: i }));
+  people.forEach(({ x, a, porg }, i) => {
+    const fly = !porg && x.svg().includes("f-float"), sk = clamp(D / 520, 1, 1.7), size = Math.round((porg != null ? 40 + (porg % 3) * 6 : 62) * sk);
+    const el = h("button", { class: "fauna on-surface" + (fly ? " fly" : "") + (porg != null ? " is-porg" : ""), "aria-label": x.n, style: { top: -(D / 2 + (fly ? 34 * sk : -2)) + "px" } }, porg != null ? porgEl(size, porg % 3) : FA.svg(x, size));
+    const orb = h("div", { class: "orb", style: { "--a": a + "deg", animationDuration: (14 + (i * 7) % 9) + "s", animationDelay: (-i * 3) + "s" } }, el);
+    let k = 0;
     el.onclick = e => {
-      e.stopPropagation(); faunaSound(x); el.classList.remove("hi"); void el.offsetWidth; el.classList.add("hi");
-      bub && bub.remove(); bub = h("div", { class: "fauna-say holo" }, h("b", null, x.n), x.say[n++ % x.say.length]); el.append(bub); setTimeout(() => bub && bub.remove(), 3800);
+      e.stopPropagation(); porg != null ? porgSqueak() : faunaSound(x);
+      el.classList.remove("hi"); void el.offsetWidth; el.classList.add("hi");
+      faunaSay(el, x.n, x.say[k++ % x.say.length]);
       if (!faunaFound().includes(x.id)) {
-        setData("fauna", [...faunaFound(), x.id]); dset({ cred: dget().cred + 1 });
-        const k = faunaFound().length; toast(x.k === "droid" ? "🤖" : "🦎", `¡Nuevo habitante! ${k} de ${FA.ALL.length}`, `${x.n} se ha añadido a la Enciclopedia. +1 chispa`, () => x.cat === "raza" ? encRace(x) : faunaCard(x));
-        if (k === FA.ALL.length) celebrate();
+        setDataQuiet("fauna", [...faunaFound(), x.id]); dsetQuiet({ cred: dget().cred + 1 });
+        const c = faunaFound().length; toast(x.k === "droid" ? "🤖" : "🦎", `¡Nuevo habitante! ${c} de ${FA.ALL.length}`, `${x.n} se ha añadido a la Enciclopedia. +1 chispa`, () => x.cat === "raza" ? encRace(x) : faunaCard(x));
+        if (c === FA.ALL.length) celebrate();
       }
     };
-    sec.append(el);
+    surf.append(orb);
   });
+}
+function faunaSay(el, name, txt) {
+  document.querySelectorAll(".fauna-say").forEach(b => b.remove());
+  const r = el.getBoundingClientRect(), b = h("div", { class: "fauna-say holo" }, h("b", null, name), txt);
+  document.body.append(b);
+  const w = b.offsetWidth; b.style.left = clamp(r.left + r.width / 2 - w / 2, 10, innerWidth - w - 10) + "px"; b.style.top = Math.max(10, r.top - b.offsetHeight - 8) + "px";
+  setTimeout(() => b.remove(), 3800);
 }

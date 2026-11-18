@@ -953,3 +953,15 @@ html[data-wipe=clock]::view-transition-new(root){animation:wipe-clock .7s linear
 .enc-links{display:grid;gap:8px}
 .enc-link{cursor:pointer;color:inherit;font:inherit;text-align:left}
 .enc-link .bar{flex:none}
+/* inhabitants standing on the planet surface */
+.cine-surface{position:absolute;inset:0;z-index:5;pointer-events:none;animation:rise 2.2s var(--ease) both}
+.orb{position:absolute;left:50%;top:108%;width:0;height:0;transform:rotate(var(--a));animation:orbwalk 16s ease-in-out infinite alternate}
+@keyframes orbwalk{from{transform:rotate(calc(var(--a) - 5deg))}to{transform:rotate(calc(var(--a) + 5deg))}}
+.fauna.on-surface{position:absolute;left:0;transform:translate(-50%,-100%);pointer-events:auto;z-index:auto;filter:drop-shadow(0 3px 4px rgba(0,0,0,.55))}
+.fauna.on-surface.fly{animation:hover 3.4s ease-in-out infinite}
+@keyframes hover{50%{translate:0 -8px}}
+.fauna.on-surface.is-porg .porg-body{animation:waddle 1.6s ease-in-out infinite;transform-origin:30px 54px}
+.fauna.on-surface.is-porg .porg-eyes{transform-origin:30px 25px;animation:blink 5s infinite}
+.fauna-say{position:fixed;z-index:80;bottom:auto;transform:none;margin:0}
+.lite .orb{animation:none}
+@media (min-width:1024px){.cine-text{top:12%}}

@@ -83,6 +83,7 @@ function emit() { save(); listeners.forEach(f => { try { f(); } catch (e) { cons
 const onChange = f => (listeners.add(f), () => listeners.delete(f));
 const getData = (k, d) => S.data[k] ?? d;
 function setData(k, v) { S.data = { ...S.data, [k]: v }; emit(); }
+function setDataQuiet(k, v) { S.data = { ...S.data, [k]: v }; save(); if (typeof updateBadges === "function") try { updateBadges(); } catch (e) { } }
 const flag = f => !!S.flags[f];
 const favs = () => getData("favorites", []);
 function toggleFav(id) { const f = favs(); setData("favorites", f.includes(id) ? f.filter(x => x !== id) : [...f, id]); }

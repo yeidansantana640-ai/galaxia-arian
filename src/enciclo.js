@@ -28,10 +28,10 @@ const WORLD_INFO = {
   yavin: ["Tropical", "Selva espesa y templos antiguos", "Luna de un gigante gaseoso", "Desde su base despegó la esperanza de toda la galaxia."],
 };
 let encTab = "planetas";
-const ENC_TABS = [["planetas", "🪐 Planetas"], ["razas", "👽 Razas"], ["droides", "🤖 Droides"], ["fauna", "🦎 Fauna"], ["porgs", "🐧 Porgs"]];
+const ENC_TABS = [["planetas", "🪐 Planetas"], ["razas", "👽 Razas"], ["droides", "🤖 Droides"], ["fauna", "🦎 Fauna"]];
 function encCounts() {
   const ff = faunaFound(), by = c => FA.ALL.filter(x => x.cat === c);
-  return { planetas: [ORDER.filter(p => S.visited[p]).length, 12], razas: [by("raza").filter(x => ff.includes(x.id)).length, by("raza").length], droides: [by("droide").filter(x => ff.includes(x.id)).length, by("droide").length], fauna: [by("fauna").filter(x => ff.includes(x.id)).length, by("fauna").length], porgs: [porgsFound().length, 12] };
+  return { planetas: [ORDER.filter(p => S.visited[p]).length, 12], razas: [by("raza").filter(x => ff.includes(x.id)).length, by("raza").length], droides: [by("droide").filter(x => ff.includes(x.id)).length, by("droide").length], fauna: [by("fauna").filter(x => ff.includes(x.id)).length, by("fauna").length] };
 }
 function viewEnciclo(params) {
   if (params && params.tab) encTab = params.tab;
@@ -39,7 +39,7 @@ function viewEnciclo(params) {
   const tabs = h("div", { class: "admin-tabs enc-tabs" }, ENC_TABS.map(([k, t]) => h("button", { "aria-pressed": encTab === k ? "true" : "false", onclick: () => { encTab = k; SFX.tap(); render(); } }, `${t} ${C[k][0]}/${C[k][1]}`)));
   const ff = faunaFound(); let cards;
   if (encTab === "planetas") cards = ORDER.map((pid, i) => { const ok = !!S.visited[pid]; return encCard(ok, planetEl(pid, 70, { revealed: true }), `${i + 1}. ${P[pid].name}`, ok ? WORLD_INFO[pid][1] : "Visita el planeta para abrir su ficha", () => encPlanet(pid)); });
-  else if (encTab === "porgs") cards = ORDER.map(pid => { const ok = porgsFound().includes(pid); return encCard(ok, porgEl(70, pid), ok ? PORG[pid].n : "Porg sin descubrir", P[pid].name, () => porgCard(pid)); });
+  if (!ENC_TABS.some(t => t[0] === encTab)) encTab = "planetas";
   else { const cat = { razas: "raza", droides: "droide", fauna: "fauna" }[encTab]; cards = FA.ALL.filter(x => x.cat === cat).map(x => { const ok = ff.includes(x.id); return encCard(ok, FA.svg(x, 76), ok ? x.n : "Sin descubrir", P[x.pid].name, () => cat === "raza" ? encRace(x) : faunaCard(x)); }); }
   return page("Enciclopedia Galáctica", ["Archivos de la República", "Todo lo que se sabe de los mundos, pueblos, droides y criaturas de esta galaxia. Cada entrada se abre cuando la descubres."],
     h("div", { class: "summary holo" }, h("div", { class: "ring", style: { "--p": Math.round(tot[0] / tot[1] * 100) } }, h("span", null, Math.round(tot[0] / tot[1] * 100) + "%")), h("div", { class: "grow" }, h("b", null, `${tot[0]} de ${tot[1]} entradas descubiertas`), h("span", null, "Explora los planetas y toca a sus habitantes para completarla."))),
@@ -67,8 +67,7 @@ function encPlanet(pid) {
     h("p", { class: "m-quote", style: { fontSize: "1.2rem" } }, P[pid].tagline),
     ok ? encRows([["Región", LAYOUT[pid].region], ["Sector", LAYOUT[pid].sector], ["Clima", W[0]], ["Terreno", W[1]], ["Cielo", W[2]], ["Dato curioso", W[3]], ["Cartas", `${got} de ${ls.length} encontradas`]]) : h("p", { class: "m-note", style: { textAlign: "center" } }, "Visita el planeta para completar su ficha."),
     h("div", { class: "section-t" }, "Quién vive aquí"),
-    h("div", { class: "enc-who" }, [...who.map(x => { const f = ff.includes(x.id); return h("button", { class: "pd" + (f ? " f" : ""), onclick: () => { closeModals(); x.cat === "raza" ? encRace(x) : faunaCard(x); } }, FA.svg(x, 44), h("small", null, f ? x.n : "¿?")); }),
-      h("button", { class: "pd" + (porgsFound().includes(pid) ? " f" : ""), onclick: () => { closeModals(); porgCard(pid); } }, porgEl(44, pid), h("small", null, porgsFound().includes(pid) ? PORG[pid].n : "¿?"))]),
+    h("div", { class: "enc-who" }, [...who.map(x => { const f = ff.includes(x.id); return h("button", { class: "pd" + (f ? " f" : ""), onclick: () => { closeModals(); x.cat === "raza" ? encRace(x) : faunaCard(x); } }, FA.svg(x, 44), h("small", null, f ? x.n : "¿?")); })]),
     h("div", { class: "m-row" }, h("button", { class: "btn btn--sm btn--primary", onclick: () => { closeModals(); SFX.jump(); hyperspace(() => go("planet", { id: pid })); } }, `🚀 Viajar a ${P[pid].name}`)),
   ], null, "📖");
 }

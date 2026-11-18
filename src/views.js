@@ -175,26 +175,7 @@ function cineHero(id) {
     h("div", { class: "cine-ship", html: `<svg viewBox="-30 -18 60 36" width="54" height="32"><path d="M-22 0 L18 -2 L24 0 L18 2Z" fill="#dfe6ef"/><path d="M-6 -2 L-16 -14 L-12 -14 L2 -2Z M-6 2 L-16 14 L-12 14 L2 2Z" fill="#c8d0dc"/><circle cx="-24" cy="0" r="3" fill="#ff8a5c"/><circle cx="-24" cy="0" r="7" fill="#ff8a5c" opacity=".35"/></svg>` }),
     pw,
     h("div", { class: "cine-text" }, h("div", { class: "eyebrow" }, `${ORDER.indexOf(id) + 1} de 12 · ${LAYOUT[id].sector}`), title, h("div", { class: "tag" }, p.tagline)));
-  faunaLayer(id, sec);
-  // porgs: a flock lives on Ahch-To, and one is hiding on every planet
-  if (id === "ahch-to") [[14, 16, 54, 0], [30, 10, 44, 1], [68, 13, 50, 2], [84, 18, 40, 0]].forEach(([x, b, sz, look], i) => {
-    const pg = h("button", { class: "porg porg--flock", "aria-label": "Un porg", style: { left: x + "%", bottom: b + "%", animationDelay: (-i * 1.3) + "s" } }, porgEl(sz, look));
-    pg.onclick = () => { porgSqueak(); pg.classList.remove("flap"); void pg.offsetWidth; pg.classList.add("flap"); };
-    sec.append(pg);
-  });
-  if (!porgsFound().includes(id)) {
-    const r = hash(id + "porg"), x = 8 + r % 70, look = r % 3;
-    const hp = h("button", { class: "porg porg--hide", "aria-label": "¡Algo se mueve! Un porg escondido", style: { left: x + "%", bottom: (12 + (r >> 4) % 14) + "%" } }, porgEl(50, id));
-    hp.onclick = () => {
-      if (porgsFound().includes(id)) return;
-      porgSqueak(); setData("porgs", [...porgsFound(), id]); dset({ cred: dget().cred + 2 });
-      hp.classList.add("caught"); setTimeout(() => hp.remove(), 1200);
-      const n = porgsFound().length;
-      toast("🐧", n === 12 ? "¡Has encontrado los 12 porgs!" : `¡${PORG[id].n}! ${n} de 12`, n === 12 ? "Eres oficialmente amiga de los porgs. +2 chispas" : `${PORG[id].d} +2 chispas`, () => porgCard(id));
-      if (n === 12) celebrate();
-    };
-    sec.append(hp);
-  }
+  const surf = h("div", { class: "cine-surface" }); pw.append(surf); faunaLayer(id, surf, D);
   // gentle parallax while scrolling
   const onScroll = () => { if (!sec.isConnected) return removeEventListener("scroll", onScroll); const y = Math.min(scrollY, 600); pw.style.transform = `translateY(${y * .35}px)`; sec.querySelector(".cine-text").style.opacity = 1 - y / 420; };
   addEventListener("scroll", onScroll, { passive: true });
@@ -267,7 +248,7 @@ function viewLetters(params) {
 function viewPlanets() {
   const un = unlockedSet(), vis = visitedCount();
   return page("Planetas", ["Descubiertos", `Has visitado ${vis} de ${ORDER.length} sistemas. Cada planeta tiene sus propias misiones y cartas.`],
-    h("button", { class: "enc-banner holo", onclick: () => go("enciclo") }, h("span", { class: "enc-b-ic" }, "📖"), h("span", { class: "grow" }, h("b", null, "Enciclopedia Galáctica"), h("small", null, "Planetas, razas, droides, fauna y porgs de la galaxia")), h("span", { class: "muted" }, "›")),
+    h("button", { class: "enc-banner holo", onclick: () => go("enciclo") }, h("span", { class: "enc-b-ic" }, "📖"), h("span", { class: "grow" }, h("b", null, "Enciclopedia Galáctica"), h("small", null, "Planetas, razas, droides y fauna de cada mundo")), h("span", { class: "muted" }, "›")),
     h("div", { class: "pcards" }, ORDER.map(pid => {
       const ok = planetUnlocked(pid), ls = lettersOf(pid), got = ls.filter(l => un.has(l.id)).length, ms = MISSIONS[pid], md = ms.filter(m => flag(m.flag)).length;
       return h("button", { class: "pcard", "data-locked": ok ? null : "", onclick: () => { if (!ok) { SFX.bad(); toast("🔒", "Señal cifrada", `Visita ${10 - vis} planetas más para revelar este sistema.`); return; } SFX.jump(); hyperspace(() => go("planet", { id: pid })); } },
