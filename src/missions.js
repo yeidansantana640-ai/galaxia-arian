@@ -20,7 +20,7 @@ const MISSIONS = {
     { flag: "endor.holocron", ic: "◈", t: "El holocrón escondido", d: "Busca entre los arbustos del bosque.", k: "search" },
     { flag: "endor.fireflies", ic: "✨", t: "Bosque de luciérnagas", d: "Atrapa las luces que vuelan entre los árboles.", k: "fireflies" },
     { flag: "endor.creature", ic: "🐻", t: "Un habitante del bosque", d: "Gánate la confianza de una criatura tímida.", k: "care", set: [{ id: "osito", e: "🐻", n: "Osito peludo" }, { id: "erizo", e: "🦔", n: "Erizo de musgo" }, { id: "ardilla", e: "🐿️", n: "Ardilla planeadora" }], acts: [["🍓", "Darle bayas"], ["🤲", "Acariciarle"], ["🎵", "Cantarle bajito"]] },
-    { flag: "endor.chest", ic: "🧰", t: "El cofre cifrado", d: "Un cofre antiguo con una cerradura Jedi.", k: "chest", req: ["jedha.cipher"], reqText: "Necesitas las coordenadas del archivo de Jedha." },
+    { flag: "endor.chest", ic: "🧰", t: "El cofre del bosque", d: "Un cofre antiguo escondido entre los árboles.", k: "chest", req: ["endor.holocron", "endor.fireflies"], reqText: "Encuentra antes el holocrón y las luciérnagas: ellos señalan dónde está el cofre." },
   ],
   "ahch-to": [
     { flag: "ahch-to.books", ic: "📚", t: "La biblioteca de piedra", d: "Abre los textos sagrados de la isla.", k: "read", key: "books", items: [
@@ -55,18 +55,15 @@ const MISSIONS = {
     { flag: "kashyyyk.creatures", ic: "🦋", t: "Criaturas del santuario", d: "Cuida a una criatura del bosque.", k: "care", set: [{ id: "lumi", e: "🦉", n: "Lumi" }, { id: "musgo", e: "🐸", n: "Musgo" }, { id: "brisa", e: "🦋", n: "Brisa" }], acts: [["💧", "Darle agua"], ["🍃", "Hacerle un nido"], ["☀️", "Llevarla al sol"]] },
     { flag: "kashyyyk.plants", ic: "🌿", t: "Colección de plantas", d: "Encuentra las seis plantas del bosque.", k: "plants" },
   ],
-  jedha: [
-    { flag: "jedha.cipher", ic: "🔐", t: "El mensaje cifrado", d: "Gira el disco hasta que el mensaje tenga sentido.", k: "cipher" },
-    { flag: "jedha.symbols", ic: "🔣", t: "El templo de los símbolos", d: "Empareja los símbolos grabados en piedra.", k: "pairs" },
-    { flag: "jedha.legends", ic: "📜", t: "Leyendas galácticas", d: "Lee las tres leyendas del archivo.", k: "read", key: "legends", items: [
-      { t: "La leyenda de la isla y la ciudad", b: "Cuentan que una isla de volcanes y una ciudad de naranjos se enviaban luz cada noche. Nadie sabía cómo, pero los navegantes juraban que, entre las dos, el mar brillaba un poco más." },
-      { t: "La leyenda del día más largo", b: "En el solsticio, dicen los guardianes de Jedha, el sol tarda tanto en irse que da tiempo a empezar algo nuevo. Por eso las historias más bonitas empiezan en junio." },
-      { t: "La leyenda de las cartas perdidas", b: "Una transmisión se rompió en mil fragmentos al cruzar la galaxia. Los sabios dicen que no se perdió: solo se escondió, esperando a la única persona capaz de reunirla." }] },
+  dagobah: [
+    { flag: "dagobah.lift", ic: "🛸", t: "Levantar la nave del pantano", d: "Mantén pulsado y usa la Fuerza para sacar la nave del agua.", k: "hold", ms: 3600, label: "Usar la Fuerza", quote: "Con calma. La Fuerza no tiene prisa." },
+    { flag: "dagobah.cave", ic: "🕯️", t: "La cueva", d: "Mueve la luz por la cueva y encuentra lo que se esconde dentro.", k: "lens", items: [["🔦", 22, 34], ["🪞", 70, 28], ["🌱", 48, 72]], hint: "Arrastra el dedo para mover la luz.", end: "Dentro de la cueva solo había un espejo… y una pequeña planta creciendo." },
+    { flag: "dagobah.stones", ic: "🪨", t: "Piedras en equilibrio", d: "Repite el orden en que se iluminan las piedras, como en el entrenamiento.", k: "simon", cols: ["#7a9a7a", "#a8c8a0", "#5a7a6a", "#c8d8b0"], end: "Equilibrio conseguido. Paso a paso se aprende todo." },
   ],
-  desconocido: [
-    { flag: "desconocido.beacons", ic: "🔆", t: "Las tres balizas", d: "Enciende las balizas para que lleguen las señales.", k: "beacons" },
-    { flag: "desconocido.crystals", ic: "💎", t: "Cristales kyber", d: "Recoge los cristales que flotan en el vacío.", k: "crystals" },
-    { flag: "desconocido.inbox", ic: "📨", t: "Mensajes del sistema", d: "Lee las señales que han llegado.", k: "inbox", req: ["desconocido.beacons"], reqText: "Enciende primero las tres balizas." },
+  yavin: [
+    { flag: "yavin.cipher", ic: "🔐", t: "El mensaje del templo", d: "Gira el disco hasta que la inscripción tenga sentido.", k: "cipher" },
+    { flag: "yavin.symbols", ic: "🔣", t: "Los símbolos del templo", d: "Empareja los símbolos grabados en la piedra.", k: "pairs" },
+    { flag: "yavin.xwing", ic: "🎯", t: "El vuelo por la trinchera", d: "Pulsa cuando la mira esté en la zona blanca. Tres aciertos.", k: "vents", icon: "🎯", btn: "¡Disparar!", lab: "Pulsa cuando la mira esté en la zona blanca.", end: "Impacto perfecto. Confiar en lo aprendido funciona." },
   ],
 };
 const FLAG2M = {}; for (const pid in MISSIONS) for (const m of MISSIONS[pid]) { m.pid = pid; FLAG2M[m.flag] = m; }
@@ -167,8 +164,7 @@ const KINDS = {
     box.append(st, b);
   },
   inbox(box, m, fin) {
-    const isD = m.pid === "desconocido";
-    const msgs = isD ? [{ id: "sys", t: "Señal sin remitente", b: "Este sistema no aparece en ningún mapa. Las balizas sirven para que las transmisiones lo encuentren." }, { id: "sys2", t: "Coordenadas de origen", b: "Origen de la señal: una isla en el Atlántico. Destino: una ciudad entre naranjos. Distancia: la que haga falta." }, { id: "sys3", t: "Fin de la transmisión", b: "Todo lo que se ha encontrado aquí es tuyo. Puedes volver siempre que quieras." }]
+    const msgs = false ? [{ id: "sys", t: "Señal sin remitente", b: "Este sistema no aparece en ningún mapa. Las balizas sirven para que las transmisiones lo encuentren." }, { id: "sys2", t: "Coordenadas de origen", b: "Origen de la señal: una isla en el Atlántico. Destino: una ciudad entre naranjos. Distancia: la que haga falta." }, { id: "sys3", t: "Fin de la transmisión", b: "Todo lo que se ha encontrado aquí es tuyo. Puedes volver siempre que quieras." }]
       : [{ id: "base", t: "Señal de bienvenida", b: "Transmisión de la torre de Coruscant: el archivo de las estrellas perdidas está recibiendo señales de todos los planetas. Si exploras, llegarán más." }, ...activeEffects().filter(e => e.effect.planet === "coruscant").map(e => ({ id: e.effect.id, t: e.effect.title, b: e.effect.body }))];
     const key = "inbox." + m.pid, read = new Set(getData(key, []));
     const list = h("div", { style: { display: "grid", gap: "8px" } });
@@ -281,7 +277,7 @@ const KINDS = {
   },
   chest(box, m, fin) {
     const c = h("div", { style: { fontSize: "92px", textAlign: "center", transition: "transform .6s", filter: "drop-shadow(0 0 20px rgba(255,217,138,.4))" } }, flag(m.flag) ? "📭" : "🧰");
-    box.append(h("div", { class: "effect" }, h("div", { class: "ic" }, "🗺️"), h("div", null, h("b", null, "Coordenadas descifradas"), h("span", null, "El archivo de Jedha ha revelado dónde está el cofre."))), c);
+    box.append(h("div", { class: "effect" }, h("div", { class: "ic" }, "🗺️"), h("div", null, h("b", null, "El bosque te guía"), h("span", null, "El holocrón y las luciérnagas señalan el rincón donde está el cofre."))), c);
     KINDS.hold(box, { ms: 2400, label: "Abrir", quote: "Dentro hay un holocrón dorado con un secreto para ti." }, () => { c.textContent = "📭"; c.style.transform = "scale(1.1)"; fin(); });
   },
   read(box, m, fin) {
@@ -316,7 +312,7 @@ const KINDS = {
     box.append(r, lab);
   },
   simon(box, m, fin) {
-    const cols = ["#ff5a1f", "#ffb347", "#ff2f6a", "#ffd06b"], notes = [262, 330, 392, 523];
+    const cols = m.cols || ["#ff5a1f", "#ffb347", "#ff2f6a", "#ffd06b"], notes = [262, 330, 392, 523];
     const pads = h("div", { class: "pads" }); const ps = cols.map((c, i) => { const p = h("button", { class: "pad", "--c": c, "aria-label": "Piedra " + (i + 1) }); pads.append(p); return p; });
     const lab = h("p", { class: "m-note", style: { textAlign: "center" } }, "Observa el camino y repítelo. 4 rondas.");
     let seq = [], inp = [], busy = true, round = 0;
@@ -326,7 +322,7 @@ const KINDS = {
     ps.forEach((p, i) => p.onclick = async () => {
       if (busy) return; await flash(i, 200); inp.push(i);
       if (inp[inp.length - 1] !== seq[inp.length - 1]) { SFX.bad(); lab.textContent = "La piedra tembló. Vuelve a mirar."; busy = true; setTimeout(play, 900); return; }
-      if (inp.length === seq.length) { round++; if (round >= 4) { busy = true; lab.textContent = "Has cruzado el río."; fin("Paso a paso, sin miedo a la lava. Así se cruza todo."); } else setTimeout(next, 500); }
+      if (inp.length === seq.length) { round++; if (round >= 4) { busy = true; lab.textContent = m.end ? "¡Conseguido!" : "Has cruzado el río."; fin(m.end || "Paso a paso, sin miedo a la lava. Así se cruza todo."); } else setTimeout(next, 500); }
     });
     const b = h("button", { class: "btn btn--primary" }, "Empezar");
     b.onclick = () => { b.remove(); seq = [Math.floor(Math.random() * 4), Math.floor(Math.random() * 4)]; play(); };
@@ -338,15 +334,16 @@ const KINDS = {
     const zone = h("div", { style: { position: "absolute", left: "72%", width: "16%", top: 0, bottom: 0, border: "2px solid #fff", borderRadius: "8px", boxShadow: "0 0 12px #fff" } });
     const needle = h("div", { style: { position: "absolute", top: "-4px", bottom: "-4px", width: "4px", background: "#fff", borderRadius: "2px", left: "0%" } });
     meter.append(zone, needle);
-    const steam = h("div", { style: { fontSize: "54px", textAlign: "center", height: "70px", transition: "opacity .4s, transform .8s", opacity: .2 } }, "♨️");
-    const lab = h("p", { class: "m-note", style: { textAlign: "center" } }, "Suelta la presión cuando la aguja esté en la zona blanca. 0 / 3");
-    const b = h("button", { class: "btn btn--primary" }, "Liberar vapor");
+    const steam = h("div", { style: { fontSize: "54px", textAlign: "center", height: "70px", transition: "opacity .4s, transform .8s", opacity: .2 } }, m.icon || "♨️");
+    const LAB = m.lab || "Suelta la presión cuando la aguja esté en la zona blanca.";
+    const lab = h("p", { class: "m-note", style: { textAlign: "center" } }, LAB + " 0 / 3");
+    const b = h("button", { class: "btn btn--primary" }, m.btn || "Liberar vapor");
     const tick = () => { if (!meter.isConnected) return; p += dir * (1.1 + ok * .35); if (p >= 100 || p <= 0) dir *= -1; needle.style.left = clamp(p, 0, 99) + "%"; raf = requestAnimationFrame(tick); };
     b.onclick = () => {
       if (p >= 70 && p <= 90) { ok++; SFX.good(); noise(.8, 3000, 300, .15); steam.style.opacity = 1; steam.style.transform = "translateY(-14px) scale(1.3)"; setTimeout(() => { steam.style.opacity = .2; steam.style.transform = ""; }, 800); }
       else { SFX.bad(); }
-      lab.textContent = `Suelta la presión cuando la aguja esté en la zona blanca. ${ok} / 3`;
-      if (ok >= 3) { cancelAnimationFrame(raf); b.disabled = true; fin("Respirar, soltar, seguir. La presión no manda: mandas tú."); }
+      lab.textContent = `${LAB} ${ok} / 3`;
+      if (ok >= 3) { cancelAnimationFrame(raf); b.disabled = true; fin(m.end || "Respirar, soltar, seguir. La presión no manda: mandas tú."); }
     };
     raf = requestAnimationFrame(tick); box.append(steam, meter, lab, b);
   },
@@ -407,14 +404,14 @@ const KINDS = {
   },
   lens(box, m, fin) {
     const st = stage("stage--lens", { background: "#02040c", touchAction: "none" }); let got = 0;
-    const items = [["🪐", 22, 30], ["🌕", 72, 24], ["🌍", 52, 72]].map(([e, x, y]) => { const b = h("button", { class: "it", "aria-label": "Objeto lejano", style: { left: x + "%", top: y + "%", opacity: .04, fontSize: "30px" } }, e); st.append(b); return b; });
+    const items = (m.items || [["🪐", 22, 30], ["🌕", 72, 24], ["🌍", 52, 72]]).map(([e, x, y]) => { const b = h("button", { class: "it", "aria-label": "Objeto lejano", style: { left: x + "%", top: y + "%", opacity: .04, fontSize: "30px" } }, e); st.append(b); return b; });
     if (flag("coruscant.lights")) st.append(h("div", { style: { position: "absolute", left: 0, right: 0, bottom: 0, height: "14%", background: "linear-gradient(0deg,rgba(255,190,100,.35),transparent)" } }), h("div", { class: "muted", style: { position: "absolute", left: "8px", bottom: "6px", fontSize: "11px", color: "#ffd27a" } }, "Resplandor de Coruscant en el horizonte"));
     const lensEl = h("div", { style: { position: "absolute", width: "110px", height: "110px", borderRadius: "50%", border: "2px solid rgba(160,210,255,.8)", boxShadow: "0 0 0 2000px rgba(0,0,0,.55),inset 0 0 20px rgba(160,210,255,.4)", transform: "translate(-50%,-50%)", left: "50%", top: "50%", pointerEvents: "none" } });
     st.append(lensEl);
     const move = e => { const r = st.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; lensEl.style.left = x + "px"; lensEl.style.top = y + "px"; for (const b of items) { const br = b.getBoundingClientRect(), d = Math.hypot(br.left + br.width / 2 - e.clientX, br.top + br.height / 2 - e.clientY); if (!b.dataset.g) b.style.opacity = d < 55 ? 1 : .04; } };
     st.addEventListener("pointermove", move); st.addEventListener("pointerdown", move);
-    items.forEach(b => b.onclick = () => { if (b.dataset.g || +b.style.opacity < .5) return; b.dataset.g = 1; b.style.opacity = 1; b.style.filter = "drop-shadow(0 0 10px #9fc8ff)"; got++; SFX.good(); lab.textContent = `${got} / 3 encontrados`; if (got === 3) fin("Desde el observatorio todo parece cerca. Ojalá la distancia funcionara igual."); });
-    const lab = h("p", { class: "m-note", style: { textAlign: "center" } }, "Arrastra el dedo para mover la lente. 0 / 3");
+    items.forEach(b => b.onclick = () => { if (b.dataset.g || +b.style.opacity < .5) return; b.dataset.g = 1; b.style.opacity = 1; b.style.filter = "drop-shadow(0 0 10px #9fc8ff)"; got++; SFX.good(); lab.textContent = `${got} / 3 encontrados`; if (got === 3) fin(m.end || "Desde el observatorio todo parece cerca. Ojalá la distancia funcionara igual."); });
+    const lab = h("p", { class: "m-note", style: { textAlign: "center" } }, (m.hint || "Arrastra el dedo para mover la lente.") + " 0 / 3");
     box.append(st, lab);
   },
   postcard(box, m, fin) {
@@ -480,7 +477,7 @@ const KINDS = {
     A.split("").forEach((c, i) => { const a = i / 26 * Math.PI * 2; wheel.append(h("span", { style: { transform: `translate(-50%,-50%) translate(${Math.sin(a) * 92}px,${-Math.cos(a) * 92}px)` } }, c)); });
     wheel.append(h("div", { style: { position: "absolute", inset: "34%", borderRadius: "50%", border: "1px solid rgba(255,217,138,.5)", display: "grid", placeItems: "center", fontSize: "26px", color: "var(--gold)" } }, "⟁"));
     const out = h("div", { class: "cipher-out" });
-    const upd = () => { const dec = enc(coded, (26 - shift) % 26); out.textContent = dec; wheel.style.transform = `rotate(${-shift / 26 * 360}deg)`; if (dec === plain) { out.style.color = "var(--gold)"; out.style.textShadow = "0 0 16px rgba(255,217,138,.6)"; fin("Desde el 21 de junio. Las coordenadas del cofre de Endor ya están descifradas."); } };
+    const upd = () => { const dec = enc(coded, (26 - shift) % 26); out.textContent = dec; wheel.style.transform = `rotate(${-shift / 26 * 360}deg)`; if (dec === plain) { out.style.color = "var(--gold)"; out.style.textShadow = "0 0 16px rgba(255,217,138,.6)"; fin("Desde el 21 de junio. La inscripción del templo guardaba vuestra fecha."); } };
     const row = h("div", { class: "m-row" }, h("button", { class: "btn btn--icon", "aria-label": "Girar a la izquierda", onclick: () => { shift = (shift + 25) % 26; SFX.tap(); upd(); } }, "↺"), h("div", { class: "chip chip--gold", style: { alignSelf: "center" } }, () => ""), h("button", { class: "btn btn--icon", "aria-label": "Girar a la derecha", onclick: () => { shift = (shift + 1) % 26; SFX.tap(); upd(); } }, "↻"));
     row.children[1].textContent = "Gira el disco";
     upd(); box.append(h("div", { class: "cipher" }, h("p", { class: "m-note", style: { fontFamily: "var(--f-display)", letterSpacing: ".12em", textAlign: "center" } }, "Mensaje grabado: " + coded), wheel, out, row));
@@ -522,8 +519,8 @@ const AMBI = {
   hoth: { sky: "linear-gradient(180deg,#0a1a2a 0%,#4a6a8a 55%,#e3f4ff 100%)", parts: ["snow", "#ffffff", 70], scape: `<path d="M0 66 L16 48 L30 62 L48 40 L64 60 L80 46 L100 58 V100 H0Z" fill="#b7d4ea"/><path d="M0 80 Q30 72 60 78 T100 76 V100 H0Z" fill="#f4faff"/><path d="M70 62 a8 8 0 0 1 16 0z" fill="#dfe8f0"/>` },
   bespin: { sky: "linear-gradient(180deg,#6a3a7a 0%,#e88fb0 50%,#ffd1e0 100%)", parts: ["cloud", "#ffe8f0", 10], scape: `<ellipse cx="50" cy="62" rx="22" ry="5" fill="#f4e0e8"/><rect x="47" y="62" width="6" height="14" fill="#e8c8d8"/><path d="M38 62 v-8 h4 v-4 h4 v-6 h8 v6 h4 v4 h4 v8z" fill="#fff0f6"/><path d="M0 86 Q20 78 40 84 T80 80 T100 84 V100 H0Z" fill="#ffffff" opacity=".7"/>` },
   kashyyyk: { sky: "linear-gradient(180deg,#0a2e2a 0%,#1f6b44 60%,#7fe0a0 100%)", parts: ["leaf", "#8affc0", 22], scape: `<g fill="#3a2414"><rect x="4" y="10" width="12" height="90"/><rect x="38" y="0" width="16" height="100"/><rect x="78" y="14" width="14" height="86"/></g><g fill="#1f5a3a"><circle cx="10" cy="12" r="14"/><circle cx="46" cy="4" r="18"/><circle cx="85" cy="14" r="15"/></g><path d="M0 88 Q50 80 100 88 V100 H0Z" fill="#0e3a2a"/>` },
-  jedha: { sky: "linear-gradient(180deg,#2a1e3a 0%,#a8825a 60%,#e8d3b0 100%)", parts: ["sand", "#ffe0b0", 24], scape: `<path d="M20 70 v-30 l4 -6 l4 6 v30z" fill="#6a5040"/><path d="M70 70 v-24 l3 -5 l3 5 v24z" fill="#6a5040"/><path d="M0 74 Q25 64 50 72 T100 70 V100 H0Z" fill="#b89670"/><path d="M45 50 L50 36 L55 50 L50 64Z" fill="#bfefff" opacity=".7"/>` },
-  desconocido: { sky: "radial-gradient(circle at 50% 30%,#3a1f7a 0%,#120a2a 60%,#05030f 100%)", parts: ["spark", "#e5c9ff", 40], scape: `<circle cx="50" cy="50" r="18" fill="none" stroke="#c9a0ff" stroke-width=".3" opacity=".6"/><circle cx="50" cy="50" r="28" fill="none" stroke="#c9a0ff" stroke-width=".2" opacity=".4"/><path d="M0 90 Q50 80 100 90 V100 H0Z" fill="#1a1040"/>` },
+  dagobah: { sky: "linear-gradient(180deg,#0e1612 0%,#24342c 55%,#4a5a48 100%)", parts: ["mist", "#cfe8d8", 16], scape: `<path d="M0 40 q10 30 4 60 h10 q2 -40 -6 -60z M86 30 q-8 40 2 70 h10 q-6 -30 0 -70z" fill="#1a2418"/><path d="M60 78 a12 10 0 0 1 24 0z" fill="#3a2e22"/><circle cx="70" cy="74" r="1.5" fill="#ffcf8a"/><rect y="80" width="100" height="20" fill="#1c2a24"/><path d="M10 86 q8 -2 16 0 M50 92 q8 -2 16 0" stroke="#5a7a6a" stroke-width=".5" fill="none"/>` },
+  yavin: { sky: "linear-gradient(180deg,#1a2a4a 0%,#ff9a7a 55%,#ffd9a0 100%)", parts: ["firefly", "#ffe8a0", 18], scape: `<circle cx="78" cy="22" r="16" fill="#e8a070" opacity=".6"/><path d="M0 66 Q30 58 60 64 T100 62 V100 H0Z" fill="#1d4a2a"/><path d="M38 64 v-6 h24 v6z M41 58 v-6 h18 v6z M44 52 v-6 h12 v6z M47 46 v-5 h6 v5z" fill="#6a7a5a"/><path d="M0 76 Q50 68 100 76 V100 H0Z" fill="#14361e"/>` },
 };
 function ambientLayer(pid) {
   const A = AMBI[pid], cv = h("canvas");

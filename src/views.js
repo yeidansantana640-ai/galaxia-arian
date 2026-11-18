@@ -62,8 +62,9 @@ function hintFor(u) {
     case "planet-visited": return `Visita ${P[u.planet].name}`;
     case "planets-visited": return `Visita ${u.min} planetas (llevas ${visitedCount()})`;
     case "all": return u.of.filter(o => !cond(o)).map(hintFor).join(" · ");
-    case "any": return "Llega un día 21… o encuentra el calendario de Alderaan";
-    case "counter": return `Lee ${u.min} cartas (llevas ${S.readLetters.length})`;
+    case "any": return "Llega un día 21… o completa todas las misiones de Yavin 4";
+    case "counter": return `Lee ${u.min} cartas (llevas ${readCount()})`;
+    case "read-count": return `Lee las otras ${u.min} cartas (llevas ${Math.min(readCount(), u.min)})`;
   }
   return "Sigue explorando";
 }
@@ -93,11 +94,17 @@ function openLetter(id, fromList) {
     K.k === "archive" ? h("div", { class: "glyphs", "aria-hidden": "true" }, "✧ ⟁ ✦ ⟁ ✧") : null,
     h("h1", null, l.title),
     h("div", { class: "rule" }),
-    l.body.map((p, i) => i === l.body.length - 1 && /^(Con todo|Tu |Te quiero|T'estime|Yeidan)/.test(p) && p.length < 60 ? h("p", { class: "sign" }, p) : h("p", null, p)),
+    l.body.map((p, i) => {
+      if (/^[A-ZÁÉÍÓÚÑ ]{8,}$/.test(p)) return h("p", { class: "p-head" }, p);
+      if (/^(Nombre del expediente|Clasificación|Observaciones registradas|Conclusión|Origen|Destino|Destinataria|Estado|Contenido|P\. D\.):/.test(p)) return h("p", { class: "p-field" }, p);
+      if (/^(Te quiero muchísimo\.|Fin de la transmisión\.)$/.test(p) && i >= l.body.length - 2) return h("p", { class: "sign" }, p);
+      return h("p", null, p);
+    }),
     h("div", { class: "rule" }),
-    h("div", { class: "stamp", style: { display: "flex", justifyContent: "space-between", gap: "8px", flexWrap: "wrap" } }, h("span", null, `${P[l.planet].name} · ${CAT[l.category]}`), h("span", null, `Archivo ${String(LETTERS.indexOf(l) + 1).padStart(2, "0")}/${LETTERS.length}`)));
+    h("div", { class: "stamp", style: { display: "flex", justifyContent: "space-between", gap: "8px", flexWrap: "wrap" } }, h("span", null, `${P[l.planet].name} · ${CAT[l.category]}`), h("span", null, `Carta ${l.n || LETTERS.indexOf(l) + 1} de ${LETTERS.length}`)));
+  const art = h("figure", { class: "scene-fig scene--" + K.k, html: SC.html(l.n) }); art.append(h("figcaption", null, SC.cap(l.n)));
   const intro = K.k === "holocron" ? h("div", null, h("div", { class: "cube" + (firstTime ? " opening" : "") }, h("div", { class: "cube-in" }, [1, 2, 3, 4, 5, 6].map(() => h("i"))))) :
-    K.k === "holo" ? h("div", { class: "projector", "aria-hidden": "true" }, droidSVG((S.profile && S.profile.droid) || "chispa", 44), h("div", { class: "beam" })) : null;
+    null;
   if (K.k === "holocron" && firstTime) { paper.style.animationDelay = "1.2s"; setTimeout(() => SFX.unlock(), 300); setTimeout(() => celebrate(), 1150); }
   else if (K.k === "holo") SFX.holo();
   const bg = h("div", { class: "reader-bg", style: { background: K.k === "holocron" ? "radial-gradient(800px 500px at 50% 0%,rgba(255,190,80,.18),transparent 60%),#05040a" : K.k === "archive" ? "radial-gradient(800px 500px at 50% 0%,rgba(200,160,100,.14),transparent 60%),#07060a" : `radial-gradient(800px 500px at 50% 0%,${LOOK[l.planet].atm}22,transparent 60%),radial-gradient(600px 400px at 50% 10%,rgba(127,227,255,.12),transparent 60%),#03040a` } });
@@ -107,13 +114,12 @@ function openLetter(id, fromList) {
   readerEl = h("div", { class: "reader", role: "dialog", "aria-label": l.title },
     bg, h("div", { class: "reader-in" },
       h("div", { class: "reader-top" }, h("button", { class: "back", onclick: () => { closeReader(); } }, svgHTML(ICON.back), "Volver"), h("div", { class: "grow" }), h("span", { class: "chip " + (K.k === "holocron" ? "chip--gold" : "chip--accent") }, K.name), favBtn),
-      intro, paper, h("div", { class: "saber" }), nav,
+      art, intro, paper, h("div", { class: "saber" }), nav,
       h("button", { class: "btn btn--ghost", onclick: () => { closeReader(); go("planet", { id: l.planet }); } }, `Ir a ${P[l.planet].name}`)));
   document.body.append(readerEl); document.body.classList.add("hide-droid");
   readerEl.addEventListener("keydown", e => { if (e.key === "Escape") closeReader(); });
   readerEl.tabIndex = -1; readerEl.focus();
   markRead(id);
-  if (firstTime && S.readLetters.length >= 59) setTimeout(() => announce(new Set(LETTERS.filter(x => x.id !== "desconocido-secreta-5").map(x => x.id))), 900);
 }
 
 /* ================= planet view ================= */
@@ -165,7 +171,7 @@ function viewLetters(params) {
       if (filter === "unread") ls = ls.filter(l => un.has(l.id) && !S.readLetters.includes(l.id));
       if (filter === "locked") ls = ls.filter(l => !un.has(l.id));
       if (!ls.length) return null;
-      return h("section", { style: { display: "grid", gap: "10px" } }, h("div", { class: "section-t" }, h("span", { style: { width: "10px", height: "10px", borderRadius: "50%", background: LOOK[pid].atm, boxShadow: `0 0 8px ${LOOK[pid].atm}` } }), planetUnlocked(pid) ? P[pid].name : "Sistema desconocido"), h("div", { class: "lcards" }, ls.map(l => letterCard(l, un))));
+      return h("section", { style: { display: "grid", gap: "10px" } }, h("div", { class: "section-t" }, h("span", { style: { width: "10px", height: "10px", borderRadius: "50%", background: LOOK[pid].atm, boxShadow: `0 0 8px ${LOOK[pid].atm}` } }), P[pid].name), h("div", { class: "lcards" }, ls.map(l => letterCard(l, un))));
     }).filter(Boolean);
     list.replaceChildren(...(groups.length ? groups : [h("div", { class: "empty" }, filter === "fav" ? "Aún no hay favoritas. Abre una carta y toca ☆ para guardarla aquí." : filter === "unread" ? "Lo has leído todo. ✨" : "Nada por aquí.")]));
   };
@@ -197,11 +203,11 @@ function viewMemories() {
   const un = unlockedSet(), ds = daysSince();
   const linkL = (id, label) => un.has(id) ? h("button", { class: "btn btn--sm", onclick: () => openLetter(id) }, (label || LBYID[id].title)) : h("span", { class: "chip" }, "🔒 " + LBYID[id].title.replace(/./g, (c, i) => i < 3 ? c : "·").slice(0, 14));
   const T = [
-    { d: "21 de junio de 2026", t: "El día más largo del año", p: "El solsticio de verano. Sin buscarlo, el principio de esta historia.", l: ["naboo-solsticio", "jedha-meses"] },
-    { d: "Agosto de 2026", t: "El primer viaje", p: "Un avión de Tenerife a Valencia. Todo lo hablado desde lejos tuvo cara, voz y mirada.", l: ["naboo-agost", "endor-flores", "coruscant-manos"] },
-    { d: "Entre agosto y octubre", t: "El tiempo de en medio", p: "Mensajes, llamadas, cuentas atrás. Lo que sostuvo todo.", l: ["tatooine-camino", "coruscant-llamadas"] },
-    { d: "3 de octubre de 2026", t: "El segundo viaje", p: "La primera vez tienes la sorpresa; la segunda, la certeza.", l: ["coruscant-octubre", "tatooine-encuentros"] },
-    { d: "Cada día 21", t: "Una pequeña estación", p: "Un sitio donde parar, mirar atrás y comprobar cuánto camino llevamos.", l: ["alderaan-dia21"] },
+    { d: "21 de junio de 2026", t: "El día más largo del año", p: "El solsticio de verano. Sin buscarlo, el principio de esta historia.", l: ["c54"] },
+    { d: "Agosto de 2026", t: "El primer viaje", p: "Un avión de Tenerife a Valencia. Todo lo hablado desde lejos tuvo cara, voz y mirada.", l: ["c01", "c07"] },
+    { d: "Entre agosto y octubre", t: "El tiempo de en medio", p: "Mensajes, llamadas, cuentas atrás. Lo que sostuvo todo.", l: ["c09", "c15"] },
+    { d: "3 de octubre de 2026", t: "El segundo viaje", p: "La primera vez tienes la sorpresa; la segunda, la certeza.", l: ["c10", "c12"] },
+    { d: "Cada día 21", t: "Una pequeña estación", p: "Un sitio donde parar, mirar atrás y comprobar cuánto camino llevamos.", l: ["c54"] },
     { d: "Hoy", t: `${ds} días después`, p: "Y la galaxia sigue creciendo.", l: [] },
   ];
   const diary = getData("diary", []), caps = getData("capsule", []), places = getData("places", []), posts = getData("postcards", []);
@@ -226,19 +232,17 @@ function viewSecrets() {
   const un = unlockedSet(), secrets = LETTERS.filter(l => l.category === "secreta"), sGot = secrets.filter(l => un.has(l.id)).length;
   const locked = LETTERS.filter(l => !un.has(l.id) && l.category !== "secreta");
   const pending = ORDER.filter(planetUnlocked).flatMap(pid => MISSIONS[pid].filter(m => !flag(m.flag)));
-  const vis = visitedCount();
   return page("Secretos por descubrir", ["Templos Jedi", "Holocrones escondidos, señales cifradas y un sistema que no aparece en ningún mapa."],
-    h("div", { class: "summary holo" }, h("div", { class: "kind-ic", style: { width: "56px", flex: "none" } }, kindIcon(LBYID["endor-secreta-1"], false)),
+    h("div", { class: "summary holo" }, h("div", { class: "kind-ic", style: { width: "56px", flex: "none" } }, kindIcon(LBYID["c57"], false)),
       h("div", { class: "grow" }, h("b", null, `${sGot} de ${secrets.length} holocrones abiertos`), h("span", null, `${locked.length} cartas cifradas · ${pending.length} misiones pendientes`))),
     h("div", { class: "section-t" }, "Logros"),
     h("p", { class: "muted", style: { margin: 0, fontSize: "13.5px" } }, `Cada logro reclamado da chispas para los accesorios de ${droidName()}.`),
     achievementsView(),
     h("div", { class: "section-t" }, "Holocrones"),
     h("div", { class: "lcards" }, secrets.map(l => letterCard(l, un))),
-    h("div", { class: "section-t" }, "El sistema desconocido"),
-    h("div", { class: "secret-row" }, h("div", { style: { width: "54px" } }, planetEl("desconocido", 54, { revealed: planetUnlocked("desconocido") })), h("div", { class: "grow" }, h("b", null, planetUnlocked("desconocido") ? "La señal se ha revelado" : "Una señal sin coordenadas"), h("span", null, planetUnlocked("desconocido") ? "Ya puedes viajar al final secreto." : `Visita 10 planetas para encontrarlo (${vis}/10).`)),
-      planetUnlocked("desconocido") ? h("button", { class: "btn btn--sm btn--gold", onclick: () => { SFX.jump(); hyperspace(() => go("planet", { id: "desconocido" })); } }, "Viajar") : null),
-    h("div", { class: "bar" }, h("i", { style: { width: Math.min(100, vis * 10) + "%" } })),
+    h("div", { class: "section-t" }, "El último holocrón"),
+    (() => { const rc = readCount(), fin = LBYID.c57, ok = un.has("c57"); return h("div", { class: "secret-row" }, h("div", { class: "kind-ic", style: { width: "44px" } }, kindIcon(fin, !ok)), h("div", { class: "grow" }, h("b", null, ok ? fin.title : "Un holocrón sellado en Yavin 4"), h("span", null, ok ? "Ya puedes abrirlo." : `Se abre al leer las otras 56 cartas (llevas ${Math.min(rc, 56)}).`)), ok ? h("button", { class: "btn btn--sm btn--gold", onclick: () => openLetter("c57") }, "Abrir") : null); })(),
+    h("div", { class: "bar" }, h("i", { style: { width: Math.min(100, readCount() / 56 * 100) + "%" } })),
     h("div", { class: "section-t" }, "Pistas del droide"),
     pending.length ? h("div", { style: { display: "grid", gap: "8px" } }, pending.slice(0, 8).map(m => h("button", { class: "secret-row", style: { textAlign: "left", cursor: "pointer", color: "inherit", font: "inherit" }, onclick: () => go("planet", { id: m.pid }) }, h("div", { style: { fontSize: "22px" } }, m.ic), h("div", { class: "grow" }, h("b", null, m.t), h("span", null, P[m.pid].name + (missionAvailable(m) ? "" : " · 🔒 " + m.reqText))), h("span", { class: "muted" }, "›"))),
       pending.length > 8 ? h("p", { class: "muted", style: { margin: 0, fontSize: "13px", textAlign: "center" } }, `Y ${pending.length - 8} misiones más repartidas por la galaxia.`) : null) : h("div", { class: "empty" }, "Has completado todas las misiones. Que la Fuerza te acompañe. ✨"));
@@ -254,6 +258,7 @@ function viewSettings() {
   const exp = () => { const blob = new Blob([JSON.stringify({ kind: "galaxia-de-arian-backup", version: 3, exportedAt: new Date().toISOString(), state: { ...S, wizard: null } }, null, 1)], { type: "application/json" }); const a = h("a", { href: URL.createObjectURL(blob), download: "galaxia-de-arian-copia.json" }); document.body.append(a); a.click(); a.remove(); toast("💾", "Copia creada", "Guarda el archivo en un sitio seguro."); };
   const file = h("input", { type: "file", accept: "application/json,.json", style: { display: "none" }, onchange: async () => { try { const j = JSON.parse(await file.files[0].text()); const stt = j.state || (j.data && j.data.state) || j.data; if (!stt || typeof stt !== "object") throw 0; for (const k in S) if (stt[k] !== undefined) S[k] = stt[k]; S.settings = { ...DEF_SETTINGS, ...S.settings }; emit(); applySettings(); toast("✅", "Progreso restaurado", "La galaxia vuelve a estar como la dejaste."); render(); } catch (e) { toast("⚠️", "No se pudo leer", "El archivo no es una copia válida de la galaxia."); } } });
   return page("Opciones", ["Panel de control", null],
+    h("button", { class: "back", style: { justifySelf: "start" }, onclick: () => history.length > 1 ? history.back() : go("map") }, svgHTML(ICON.back), "Volver"),
     h("div", { class: "section-t" }, "Tu sable de luz"),
     h("div", { class: "setrow", style: { display: "grid" } }, h("span", { class: "muted" }, "El color de tu sable tiñe toda la galaxia."), sabers),
     h("div", { class: "section-t" }, "Tu droide"),
@@ -351,18 +356,18 @@ function setup(done) {
   document.body.append(el); draw();
 }
 function whatsNew(after) {
-  if (getData("v2seen") || !S.readLetters.length) { if (!getData("v2seen")) setData("v2seen", true); return after && after(); }
-  setData("v2seen", true);
-  const close = modal(h("div", null, h("div", { class: "eyebrow" }, "Transmisión prioritaria"), h("h2", null, "La galaxia se ha ampliado")), [
+  const returning = S.readLetters.length || Object.keys(S.visited).length;
+  if (getData("v3seen") || !returning) { if (!getData("v3seen")) setData("v3seen", true); return after && after(); }
+  setData("v3seen", true);
+  const close = modal(h("div", null, h("div", { class: "eyebrow" }, "Transmisión prioritaria"), h("h2", null, "Cartas entre las estrellas")), [
     h("div", { class: "projector" }, droidSVG((S.profile && S.profile.droid) || "chispa", 50), h("div", { class: "beam", style: { height: "30px" } })),
     h("div", { class: "paper paper--holo", style: { padding: "18px" } },
-      h("p", { style: { fontSize: "1.15rem" } }, `${herName()}, los archivos de la República han sido actualizados:`),
-      h("p", { style: { fontSize: "1.05rem", fontFamily: "var(--f-body)" } }, "🗺️ Un mapa galáctico nuevo: arrastra, pellizca y salta al hiperespacio."),
-      h("p", { style: { fontSize: "1.05rem", fontFamily: "var(--f-body)" } }, "🪐 Cada planeta tiene ahora su propio paisaje y misiones distintas."),
-      h("p", { style: { fontSize: "1.05rem", fontFamily: "var(--f-body)" } }, "📡 Las cartas llegan como transmisiones, documentos Jedi u holocrones."),
-      h("p", { style: { fontSize: "1.05rem", fontFamily: "var(--f-body)" } }, "★ Puedes guardar tus cartas favoritas."),
-      h("p", { style: { fontSize: "1.05rem", fontFamily: "var(--f-body)" } }, `🤖 Toca a ${droidName()} para hablar, cuidarle, ponerle accesorios y jugar.`),
-      h("p", { style: { fontSize: "1.05rem", fontFamily: "var(--f-body)" } }, "Todo lo que ya habías encontrado sigue aquí.")),
+      h("p", { style: { fontSize: "1.15rem" } }, `${herName()}, han llegado ${LETTERS.length} cartas nuevas a la galaxia.`),
+      h("p", { style: { fontSize: "1.05rem", fontFamily: "var(--f-body)" } }, "✉️ Cada una habla de un momento de Star Wars y tiene su propia ilustración."),
+      h("p", { style: { fontSize: "1.05rem", fontFamily: "var(--f-body)" } }, "🪐 Dos planetas nuevos en el mapa: Dagobah y Yavin 4."),
+      h("p", { style: { fontSize: "1.05rem", fontFamily: "var(--f-body)" } }, "🗺️ Sigue el orden del 1 al 12: la flecha dorada te dice dónde ir."),
+      h("p", { style: { fontSize: "1.05rem", fontFamily: "var(--f-body)" } }, "◈ Al final del viaje te espera el último holocrón."),
+      h("p", { style: { fontSize: "1.05rem", fontFamily: "var(--f-body)" } }, "Las misiones que ya habías hecho siguen contando.")),
     h("button", { class: "btn btn--primary", onclick: () => close() }, "Explorar")], after, "📡");
 }
 

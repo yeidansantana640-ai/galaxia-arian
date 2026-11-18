@@ -35,13 +35,13 @@ function gate(done) {
 function openHelp() {
   const sec = (ic, t, ...p) => h("details", { class: "help-s" }, h("summary", null, h("span", { class: "help-ic" }, ic), h("b", null, t)), h("div", { class: "help-b" }, p.map(x => h("p", null, x))));
   modal(h("div", null, h("div", { class: "eyebrow" }, "Manual del explorador"), h("h2", null, "¿Cómo funciona?")), [
-    h("p", { class: "m-note", style: { margin: 0 } }, `Esta galaxia es un regalo. Hay 60 cartas escondidas en 12 planetas y el objetivo es encontrarlas todas, ${herName()}, a tu ritmo. No hay prisa ni se pierde nada.`),
+    h("p", { class: "m-note", style: { margin: 0 } }, `Esta galaxia es un regalo. Hay ${LETTERS.length} cartas escondidas en ${ORDER.length} planetas y el objetivo es encontrarlas todas, ${herName()}, a tu ritmo. No hay prisa ni se pierde nada.`),
     sec("🗺️", "1. El mapa", "Cada planeta tiene un número del 1 al 12: es el orden recomendado del viaje.", "La flecha dorada ▼ y el botón ▶ de arriba a la izquierda te dicen siempre a dónde ir ahora.", "Arrastra con un dedo para moverte y pellizca para acercar. Los botones de la derecha acercan, alejan, centran y muestran toda la galaxia."),
     sec("🪐", "2. Los planetas", "Toca un planeta en el mapa y luego «Saltar al hiperespacio» para viajar.", "Dentro, cada planeta tiene su paisaje y 3 o 4 misiones. La misión marcada con «▶ Empieza aquí» es la siguiente."),
     sec("🎮", "3. Las misiones", "Son pequeños juegos: encender una ciudad, pilotar una nave, descifrar un mensaje, respirar con la Fuerza…", "Al terminar una misión se abren cartas nuevas. Si una misión está bloqueada, te dice qué hacer antes."),
     sec("✉️", "4. Las cartas", "Llegan de tres formas: 📡 transmisiones holográficas, 📜 documentos del Archivo Jedi y ◈ holocrones secretos.", "En la pestaña «Cartas» están todas. Toca ☆ dentro de una carta para guardarla en Favoritas. Las cartas bloqueadas te dicen cómo abrirlas."),
     sec("🤖", "5. Tu droide", "El droide de abajo a la derecha te acompaña. Tócalo para pedir pistas, hablar, cuidarlo, ponerle accesorios y jugar a «Sigue las luces».", "Ganas chispas ✦ al completar misiones y logros, y con ellas compras accesorios."),
-    sec("🏅", "6. Logros, Orbi y secretos", "En «Secretos» están los holocrones, los logros (reclámalos para ganar chispas) y el sistema desconocido, que aparece al visitar 10 planetas.", "Orbi, una esfera pequeña, aparece a veces en los planetas con un mensaje escondido."),
+    sec("🏅", "6. Logros, Orbi y secretos", "En «Secretos» están los holocrones, los logros (reclámalos para ganar chispas) y el último holocrón, que se abre al leer todas las demás cartas.", "Orbi, una esfera pequeña, aparece a veces en los planetas con un mensaje escondido."),
     sec("⭐", "7. Recuerdos", "La línea temporal de vuestra historia, los días que lleváis y todo lo que tú escribas: el holodiario, la cápsula del tiempo, los lugares soñados y las postales."),
     sec("💾", "8. Todo se recuerda", "La galaxia guarda tu progreso sola en este dispositivo: cartas leídas, misiones, favoritas, droide y dónde te quedaste.", "Cada móvil u ordenador tiene su propio progreso. Para pasarlo a otro, usa ⚙️ Opciones → Copia de seguridad."),
     h("div", { class: "m-row" }, h("button", { class: "btn btn--primary", onclick: () => { closeModals(); if (route.name !== "map") go("map"); setTimeout(startTour, 500); } }, "Ver la visita guiada"), h("button", { class: "btn", onclick: () => closeModals() }, "Entendido")),
@@ -58,7 +58,7 @@ function startTour() {
     { sel: '.tab[data-id="letters"]', t: "Cartas", b: "Aquí se guardan todas las cartas que encuentres, con tus favoritas ★." },
     { sel: '.tab[data-id="planets"]', t: "Planetas", b: "Los 12 planetas y cuánto llevas de cada uno." },
     { sel: '.tab[data-id="memories"]', t: "Recuerdos", b: "Vuestra línea temporal y todo lo que escribas en la galaxia." },
-    { sel: '.tab[data-id="secrets"]', t: "Secretos", b: "Holocrones, logros con premio y el sistema que no sale en el mapa." },
+    { sel: '.tab[data-id="secrets"]', t: "Secretos", b: "Holocrones, logros con premio y el último holocrón del viaje." },
     { sel: '.mtool[aria-label^="Ayuda"]', t: "Si te pierdes", b: "Este botón «?» lo explica todo otra vez. ¡Que la Fuerza te acompañe!" },
   ];
   let i = 0;

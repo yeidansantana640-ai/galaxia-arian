@@ -92,29 +92,29 @@ const PLANETS = DATA.planets;
 const P = Object.fromEntries(PLANETS.map(p => [p.id, p]));
 const LETTERS = DATA.letters;
 const LBYID = Object.fromEntries(LETTERS.map(l => [l.id, l]));
-const ORDER = ["naboo", "coruscant", "tatooine", "endor", "ahch-to", "mustafar", "alderaan", "hoth", "bespin", "kashyyyk", "jedha", "desconocido"];
+const ORDER = ["naboo", "tatooine", "coruscant", "hoth", "bespin", "endor", "dagobah", "alderaan", "kashyyyk", "ahch-to", "mustafar", "yavin"];
 /* galactic layout (world units 2400 x 1700) */
 const WORLD = { w: 2400, h: 1700 };
 const LAYOUT = {
   naboo: { x: 640, y: 1290, r: 58, region: "Borde Medio", sector: "Sector Chommell · O-17" },
-  coruscant: { x: 1060, y: 1130, r: 62, region: "Núcleo", sector: "Sector Corusca · 0-0-0" },
-  tatooine: { x: 1480, y: 1300, r: 54, region: "Borde Exterior", sector: "Sector Arkanis · R-16" },
-  endor: { x: 1880, y: 1120, r: 42, region: "Borde Exterior", sector: "Sector Moddell · H-16" },
-  "ahch-to": { x: 2080, y: 770, r: 50, region: "Regiones Desconocidas", sector: "Sistema Ahch-To · ?" },
-  mustafar: { x: 1700, y: 600, r: 46, region: "Borde Exterior", sector: "Sistema Mustafar · L-19" },
-  alderaan: { x: 1270, y: 760, r: 50, region: "Núcleo", sector: "Sector Alderaan · M-10" },
-  hoth: { x: 860, y: 640, r: 50, region: "Borde Exterior", sector: "Sistema Hoth · K-18" },
-  bespin: { x: 440, y: 820, r: 62, region: "Borde Exterior", sector: "Sistema Anoat · K-18" },
-  kashyyyk: { x: 380, y: 400, r: 54, region: "Borde Medio", sector: "Sistema Kashyyyk · P-9" },
-  jedha: { x: 830, y: 250, r: 40, region: "Borde Medio", sector: "Sistema NaJedha · M-7" },
-  desconocido: { x: 1350, y: 230, r: 48, region: "Más allá del mapa", sector: "Coordenadas: desconocidas" },
+  tatooine: { x: 1060, y: 1130, r: 54, region: "Borde Exterior", sector: "Sector Arkanis · R-16" },
+  coruscant: { x: 1480, y: 1300, r: 62, region: "Núcleo", sector: "Sector Corusca · 0-0-0" },
+  hoth: { x: 1880, y: 1120, r: 50, region: "Borde Exterior", sector: "Sistema Hoth · K-18" },
+  bespin: { x: 2080, y: 770, r: 62, region: "Borde Exterior", sector: "Sistema Anoat · K-18" },
+  endor: { x: 1700, y: 600, r: 42, region: "Borde Exterior", sector: "Sector Moddell · H-16" },
+  dagobah: { x: 1270, y: 760, r: 46, region: "Borde Exterior", sector: "Sistema Dagobah · M-19" },
+  alderaan: { x: 860, y: 640, r: 50, region: "Núcleo", sector: "Sector Alderaan · M-10" },
+  kashyyyk: { x: 440, y: 820, r: 56, region: "Borde Medio", sector: "Sistema Kashyyyk · P-9" },
+  "ahch-to": { x: 380, y: 400, r: 50, region: "Regiones Desconocidas", sector: "Sistema Ahch-To · ?" },
+  mustafar: { x: 830, y: 250, r: 46, region: "Borde Exterior", sector: "Sistema Mustafar · L-19" },
+  yavin: { x: 1350, y: 230, r: 44, region: "Borde Exterior", sector: "Sistema Yavin · P-6" },
 };
 const REGIONS = [
   { x: 1060, y: 1530, t: "Borde Medio", s: "Aquí empieza el viaje" },
-  { x: 2050, y: 1450, t: "Borde Exterior", s: "Tatooine · Endor" },
-  { x: 1240, y: 940, t: "Núcleo Profundo", s: "Coruscant · Alderaan" },
-  { x: 2050, y: 420, t: "Regiones Desconocidas", s: "Ahch-To" },
-  { x: 380, y: 1150, t: "Sistema Anoat", s: "Bespin" },
+  { x: 2050, y: 1450, t: "Borde Exterior", s: "Hoth · Bespin" },
+  { x: 1270, y: 940, t: "Pantanos de Dagobah", s: "Aprender sin prisa" },
+  { x: 380, y: 200, t: "Regiones Desconocidas", s: "Ahch-To" },
+  { x: 1350, y: 80, t: "Sistema Yavin", s: "El final del viaje" },
 ];
 /* each planet's look */
 const LOOK = {
@@ -128,14 +128,15 @@ const LOOK = {
   hoth: { kind: "ice", c: ["#8fb3d4", "#cfe2f2", "#f4faff", "#ffffff"], atm: "#e3f4ff", rot: 110 },
   bespin: { kind: "gas", c: ["#d9849f", "#f0b48a", "#ffe2c4", "#c06a9a"], atm: "#ffb8d2", rot: 45 },
   kashyyyk: { kind: "forest", c: ["#0e3a2a", "#1f6b44", "#3fa06a", "#a8e8b8"], atm: "#8affc0", rot: 65 },
-  jedha: { kind: "moon", c: ["#8a6a4a", "#b89670", "#e8d3b0", "#fff4dc"], atm: "#ffe0b0", rot: 95 },
-  desconocido: { kind: "void", c: ["#120a2a", "#3a1f7a", "#8a5cd8", "#e5c9ff"], atm: "#c9a0ff", rot: 40 },
+  dagobah: { kind: "swamp", c: ["#1a2a1e", "#2f4a32", "#5a7a4a", "#b8c8a8"], atm: "#a8d8b0", rot: 85 },
+  yavin: { kind: "terran", c: ["#1f6a7a", "#3a8a3a", "#a8d070", "#ffffff"], atm: "#c8f0a0", rot: 70 },
 };
 /* hyperspace lane: story order */
-const LANE = ["naboo", "coruscant", "tatooine", "endor", "ahch-to", "mustafar", "alderaan", "hoth", "bespin", "kashyyyk", "jedha", "desconocido"];
+const LANE = ORDER;
 const LANE_EDGES = LANE.slice(1).map((b, i) => [LANE[i], b]);
 
 /* ================= unlock logic ================= */
+const readCount = () => S.readLetters.filter(id => LBYID[id]).length;
 const visitedCount = () => Object.keys(S.visited).filter(k => S.visited[k]).length;
 function cond(u) {
   if (!u) return true;
@@ -147,6 +148,7 @@ function cond(u) {
     case "all": return u.of.every(cond);
     case "any": return u.of.some(cond);
     case "counter": return (S.counters[u.key] || 0) >= u.min;
+    case "read-count": return readCount() >= u.min;
     case "day-of-month": return new Date().getDate() === u.day;
   }
   return false;
@@ -160,12 +162,12 @@ function rememberDay(id) { const s = getData("seenUnlock", []); if (!s.includes(
 const unlockedSet = () => new Set(LETTERS.filter(letterUnlocked).map(l => l.id));
 const lettersOf = pid => LETTERS.filter(l => l.planet === pid);
 function planetUnlocked(pid) {
-  if (pid !== "desconocido") return true;
-  return S.settings.devOpenAll || visitedCount() >= 10 || !!S.visited.desconocido;
+  return !!P[pid];
 }
 const markRead = id => {
   if (S.readLetters.includes(id)) return;
-  S.readLetters = [...S.readLetters, id]; S.counters = { ...S.counters, "letters.read": S.readLetters.length }; emit();
+  const before = unlockedSet();
+  S.readLetters = [...S.readLetters, id]; S.counters = { ...S.counters, "letters.read": readCount() }; emit(); announce(before);
 };
 function visit(pid) {
   const before = unlockedSet();
@@ -189,8 +191,8 @@ function announce(before) {
 }
 const activeEffects = () => DATA.effects.filter(e => e.requires.every(f => S.flags[f]));
 function kindOf(l) {
-  if (l.category === "secreta") return { k: "holocron", name: "Holocrón", arrive: "Holocrón desbloqueado", glyph: "◈" };
-  if (l.category === "fe-valores") return { k: "archive", name: "Archivo Jedi", arrive: "Documento del Archivo Jedi", glyph: "📜" };
+  if (l.kind === "holocron" || l.category === "secreta") return { k: "holocron", name: "Holocrón", arrive: "Holocrón desbloqueado", glyph: "◈" };
+  if (l.kind === "archive" || (!l.kind && l.category === "fe-valores")) return { k: "archive", name: "Archivo Jedi", arrive: "Documento del Archivo Jedi", glyph: "📜" };
   return { k: "holo", name: "Transmisión", arrive: "Nueva transmisión holográfica", glyph: "📡" };
 }
 const CAT = { historia: "Nuestra historia", admiracion: "Admiración", recuerdos: "Recuerdos", suenos: "Sueños", distancia: "Distancia", momentos: "Momentos", "fe-valores": "Fe y valores", secreta: "Secreta" };
@@ -243,7 +245,7 @@ function fanfare() { // original short motif
 }
 const AMB = {
   naboo: [220, 277, 330], coruscant: [196, 247, 294], tatooine: [174, 220, 261], endor: [196, 233, 294], "ahch-to": [147, 185, 220], mustafar: [110, 131, 165],
-  alderaan: [262, 330, 392], hoth: [294, 370, 440], bespin: [233, 294, 349], kashyyyk: [165, 208, 247], jedha: [185, 220, 277], desconocido: [123, 156, 185],
+  alderaan: [262, 330, 392], hoth: [294, 370, 440], bespin: [233, 294, 349], kashyyyk: [165, 208, 247], dagobah: [147, 175, 220], yavin: [196, 247, 330],
 };
 let ambPid = null;
 function ambience(pid) {
@@ -278,7 +280,7 @@ function vnoise(r) {
 function hex2rgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
 function mix(c1, c2, t) { return [lerp(c1[0], c2[0], t), lerp(c1[1], c2[1], t), lerp(c1[2], c2[2], t)]; }
 function ramp(cols, t) { t = clamp(t, 0, .9999) * (cols.length - 1); const i = Math.floor(t); return mix(cols[i], cols[i + 1], t - i); }
-const TEXV = "galaxia-arian:tex1";
+const TEXV = "galaxia-arian:tex2";
 try { Object.assign(TEX, JSON.parse(localStorage.getItem(TEXV) || "{}")); } catch (e) { }
 let texSaveT = 0;
 function texture(pid) {
@@ -308,6 +310,7 @@ function texture(pid) {
       case "desert": { const b = Math.sin(v * 24 + e * 6) * .5 + .5; col = ramp([C[0], C[1], C[2], C[3]], e * .7 + b * .3); break; }
       case "forest": { col = ramp([C[0], C[1], C[2]], e * 1.15); const cl = fbm(u + .5, v, 4, 2.2); if (cl > .6) col = mix(col, C[3], (cl - .6) * 2.2); break; }
       case "ocean": { col = ramp([C[0], C[1], C[2]], e); if (e > .64) col = mix([60, 90, 70], [120, 130, 110], (e - .64) * 4); const cl = fbm(u + .2, v, 4, 2.6); if (cl > .56) col = mix(col, C[3], clamp((cl - .56) * 2.8, 0, .8)); break; }
+      case "swamp": { col = ramp([C[0], C[1], C[2]], e * 1.1); const w = n2(x * .3, y * .3); if (w > .66) col = mix(col, [40, 60, 60], .6); const cl = fbm(u + .3, v, 4, 2.4); if (cl > .5) col = mix(col, C[3], clamp((cl - .5) * 2, 0, .75)); break; }
       case "lava": { col = ramp([C[0], C[1]], e); const cr = Math.abs(fbm(u, v, 4, 2.2) - .5); if (cr < .05) col = mix(C[3], C[2], cr * 20); else if (cr < .09) col = mix(col, C[2], (.09 - cr) * 14); break; }
       case "ice": { col = ramp([C[0], C[1], C[2], C[3]], e * 1.1); const cr = Math.abs(fbm(u + .4, v, 3, 3) - .5); if (cr < .03) col = mix(col, [140, 180, 220], .6); break; }
       case "gas": { const b = Math.sin(v * 30 + fbm(u, v, 3, 1.4) * 5) * .5 + .5; col = ramp([C[3], C[0], C[1], C[2]], b * .8 + e * .2); break; }
@@ -330,8 +333,7 @@ function planetEl(pid, d, opts = {}) {
   wrap.append(pl);
   if (pid === "tatooine") wrap.append(svgHTML(`<svg class="p-extra" viewBox="0 0 100 100" style="left:-80%;top:-70%;width:120%;height:120%"><circle cx="40" cy="40" r="9" fill="#fff4c8"/><circle cx="62" cy="30" r="6" fill="#ffd27a"/><circle cx="40" cy="40" r="18" fill="rgba(255,230,160,.25)"/><circle cx="62" cy="30" r="13" fill="rgba(255,200,120,.2)"/></svg>`));
   if (pid === "endor") wrap.append(svgHTML(`<svg class="p-extra" viewBox="0 0 100 100" style="left:55%;top:-95%;width:130%;height:130%;z-index:-1"><defs><radialGradient id="gg" cx=".35" cy=".35"><stop offset="0" stop-color="#9fb4c8"/><stop offset=".7" stop-color="#4a5d7a"/><stop offset="1" stop-color="#1a2234"/></radialGradient></defs><circle cx="50" cy="50" r="38" fill="url(#gg)" opacity=".55"/></svg>`));
-  if (pid === "jedha") wrap.append(svgHTML(`<svg class="p-extra" viewBox="0 0 100 100" style="left:52%;top:18%;width:30%;height:30%"><path d="M50 10 L62 50 L50 90 L38 50Z" fill="#bfefff" opacity=".9"/><circle cx="50" cy="50" r="30" fill="rgba(160,230,255,.25)"/></svg>`));
-  if (pid === "desconocido" && !opts.revealed) wrap.append(h("div", { class: "p-extra", style: { inset: 0, display: "grid", placeItems: "center", font: `700 ${d * .45}px var(--f-display)`, color: "rgba(230,210,255,.75)", textShadow: "0 0 12px #a070ff" } }, "?"));
+  if (pid === "yavin") wrap.append(svgHTML(`<svg class="p-extra" viewBox="0 0 100 100" style="left:48%;top:-90%;width:140%;height:140%;z-index:-1"><defs><radialGradient id="yg" cx=".35" cy=".35"><stop offset="0" stop-color="#ffcf9a"/><stop offset=".7" stop-color="#c06a3a"/><stop offset="1" stop-color="#5a2a1a"/></radialGradient></defs><circle cx="50" cy="50" r="38" fill="url(#yg)" opacity=".55"/></svg>`));
   return wrap;
 }
 

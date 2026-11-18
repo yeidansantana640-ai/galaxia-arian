@@ -47,6 +47,8 @@ function droidFull(size = 64, d) {
 
 /* ---------- achievements board ---------- */
 const PREW = { a: 2, b: 3, c: 5 };
+DATA2.pach.dagobah = { cat: "descubrimiento", a: ["La nave del pantano", "Llega a Dagobah y saca la nave del agua con la Fuerza."], b: ["La cueva", "Entra en la cueva y descubre lo que esconde."], c: ["Dagobah, completo", "Haz todo lo que Dagobah guarda."] };
+DATA2.pach.yavin = { cat: "puzles", a: ["La inscripción del templo", "Llega a Yavin 4 y descifra el mensaje del templo."], b: ["Símbolos antiguos", "Empareja todos los símbolos del templo."], c: ["Yavin 4, completo", "Haz todo lo que Yavin 4 guarda."] };
 function achievements() {
   const d = dget(), list = [];
   for (const pid of ORDER) {
@@ -54,15 +56,15 @@ function achievements() {
     const steps = { a: [ms[0].flag], b: [ms[1].flag], c: ms.map(m => m.flag) };
     for (const k of ["a", "b", "c"]) list.push({ id: `${pid}-${k}`, group: P[pid].name, title: def[k][0], desc: def[k][1], reward: PREW[k], prog: () => [steps[k].filter(flag).length, steps[k].length] });
   }
-  const allMap = ORDER.filter(p => p !== "desconocido").flatMap(p => MISSIONS[p].map(m => m.flag));
+  const allMap = ORDER.flatMap(p => MISSIONS[p].map(m => m.flag));
   const claimedN = () => (getData("missions", { claimed: [] }).claimed || []).length;
   const G = [
     ["galaxia-1", "Tres mundos", "Visita tres planetas distintos.", 3, () => [visitedCount(), 3]],
     ["galaxia-2", "Medio camino", "Visita seis planetas.", 5, () => [visitedCount(), 6]],
-    ["galaxia-3", "Toda la galaxia", "Visita los once planetas del mapa.", 8, () => [ORDER.filter(p => p !== "desconocido" && S.visited[p]).length, 11]],
-    ["galaxia-4", "Lectora de cartas", "Lee diez cartas con calma.", 4, () => [S.readLetters.length, 10]],
-    ["galaxia-5", "Mitad de la historia", "Lee treinta cartas.", 6, () => [S.readLetters.length, 30]],
-    ["galaxia-6", "Cada interacción cuenta", "Completa todas las misiones de los once planetas del mapa.", 10, () => [allMap.filter(flag).length, allMap.length]],
+    ["galaxia-3", "Toda la galaxia", "Visita los doce planetas del mapa.", 8, () => [ORDER.filter(p => S.visited[p]).length, 12]],
+    ["galaxia-4", "Lectora de cartas", "Lee diez cartas con calma.", 4, () => [readCount(), 10]],
+    ["galaxia-5", "Mitad de la historia", "Lee treinta cartas.", 6, () => [readCount(), 30]],
+    ["galaxia-6", "Cada interacción cuenta", "Completa todas las misiones de los doce planetas.", 10, () => [allMap.filter(flag).length, allMap.length]],
     ["galaxia-7", "Cazadora de estrellas", "Reclama diez logros.", 6, () => [claimedN(), 10]],
     ["galaxia-8", "Constelación de logros", "Reclama veinticinco logros.", 10, () => [claimedN(), 25]],
   ];
