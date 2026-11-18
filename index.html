@@ -3111,7 +3111,7 @@ function whatsNewForce() { setData("v3seen", false); const keep = S.readLetters;
 /* ================= SYNC: la misma galaxia en el móvil, el iPad y el ordenador ================= */
 // El progreso se guarda cifrado (AES-GCM, con una clave derivada de la de las cartas) en una tabla de Supabase.
 // Sin la contraseña de entrada nadie puede saber qué fila es ni leer lo que hay dentro.
-const SYNC_CFG = { url: "", key: "" }; // ← URL del proyecto y clave pública (anon / publishable) de Supabase
+const SYNC_CFG = { url: "https://muwasytyllxxbrmsibvo.supabase.co", key: "sb_publishable__LWr9653TGdjGle1xi3Rcg_aRE_O8mV" }; // ← URL del proyecto y clave pública (anon / publishable) de Supabase
 const SYNC_META = "galaxia-arian:sync";
 const SYNC_UNION = ["seenUnlock", "fauna", "porgs", "diary", "postcards", "places", "capsule", "missions", "beacons", "trips"];
 const syncOn = () => !!(SYNC_CFG.url && SYNC_CFG.key) && !isAdmin();
