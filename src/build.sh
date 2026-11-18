@@ -12,6 +12,6 @@ cat <<'H'
 H
 cat styles.css
 echo '</style></head><body><script>'
-cat data.public.js data.enc.js data2.js core.js missions.js map.js droid.js guide.js scenes.js fauna.js views.js
+cat data.public.js data.enc.js data2.js core.js missions.js map.js droid.js guide.js scenes.js fauna.js enciclo.js views.js
 echo '</script></body></html>'
 } > ../index.html

@@ -116,7 +116,7 @@ function achievements() {
   const pn = () => [getData("porgs", []).length];
   for (const [id, title, desc, reward, t] of [["porgs-1", "Primer porg", "Encuentra tu primer porg escondido.", 2, 1], ["porgs-6", "Medio nido", "Encuentra seis porgs.", 5, 6], ["porgs-12", "Amiga de los porgs", "Encuentra los 12 porgs, uno en cada planeta.", 10, 12]])
     list.push({ id, group: "Porgs", title, desc, reward, prog: () => [pn()[0], t] });
-  for (const [id, title, desc, reward, t] of [["fauna-1", "Primer saludo", "Conoce a tu primer habitante de la galaxia.", 2, 1], ["fauna-12", "Diplomática galáctica", "Conoce a 12 habitantes distintos.", 5, 12], ["fauna-24", "Guía completa", "Conoce a los 24 habitantes de los 12 planetas.", 10, 24]])
+  for (const [id, title, desc, reward, t] of [["fauna-1", "Primer saludo", "Conoce a tu primer habitante de la galaxia.", 2, 1], ["fauna-12", "Diplomática galáctica", "Conoce a 12 habitantes distintos.", 5, 12], ["fauna-24", "Guía completa", "Conoce a todos los habitantes de los 12 planetas.", 10, FA.ALL.length]])
     list.push({ id, group: "Habitantes", title, desc, reward, prog: () => [getData("fauna", []).length, t] });
   const claimed = new Set(getData("missions", { claimed: [] }).claimed || []);
   for (const a of list) { const [n, t] = a.prog(); a.n = Math.min(n, t); a.t = t; a.state = claimed.has(a.id) ? "hecho" : n >= t ? "reclamar" : "activo"; }

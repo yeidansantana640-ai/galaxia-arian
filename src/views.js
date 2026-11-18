@@ -12,14 +12,14 @@ function go(name, params = {}, push = true) {
 }
 window.addEventListener("popstate", e => { const st = e.state || { name: "map", params: {} }; route = st; closeModals(); closeReader(); render(); });
 function render() {
-  const tabFor = { planet: "planets", settings: "map" }[route.name] || route.name;
+  const tabFor = { planet: "planets", settings: "map", enciclo: "planets" }[route.name] || route.name;
   tabbar.querySelectorAll(".tab").forEach(t => t.toggleAttribute("aria-current", false) || (t.dataset.id === tabFor && t.setAttribute("aria-current", "page")));
   updateBadges();
   if (route.name !== "planet") stopAmbience();
   document.body.classList.toggle("hide-droid", !["map", "planet"].includes(route.name));
   if (route.name === "map") { render.last = "map"; viewEl.replaceChildren(); viewEl.style.display = "none"; MAP.show(document.getElementById("app")); return; }
   MAP.hide(); viewEl.style.display = "";
-  const V = { letters: viewLetters, planets: viewPlanets, memories: viewMemories, secrets: viewSecrets, planet: viewPlanet, settings: viewSettings }[route.name] || viewPlanets;
+  const V = { enciclo: viewEnciclo, letters: viewLetters, planets: viewPlanets, memories: viewMemories, secrets: viewSecrets, planet: viewPlanet, settings: viewSettings }[route.name] || viewPlanets;
   const key = route.name + JSON.stringify(route.params || {});
   viewEl.classList.toggle("noanim", key === render.last); render.last = key;
   viewEl.replaceChildren(V(route.params));
@@ -37,7 +37,7 @@ function buildTabbar() {
   document.body.append(tabbar);
 }
 function splitLetters(text, d0, step) { let k = 0; return text.split(" ").map((w, wi, arr) => [h("span", { class: "word" }, [...w].map(c => h("span", { class: "ch", style: { animationDelay: (d0 + (k++) * step) + "s" } }, c))), wi < arr.length - 1 ? " " : null]); }
-const PAGE_ART = { letters: [52, "#7fe3ff"], planets: [55, "#ffd98a"], memories: [54, "#ffb38a"], secrets: [57, "#ffd98a"], settings: [21, "#9fb4ff"] };
+const PAGE_ART = { enciclo: [13, "#9fd8ff"], letters: [52, "#7fe3ff"], planets: [55, "#ffd98a"], memories: [54, "#ffb38a"], secrets: [57, "#ffd98a"], settings: [21, "#9fb4ff"] };
 function page(title, lead, ...kids) {
   const art = PAGE_ART[route.name];
   const t = h("h1", { class: "ptitle", "aria-label": title }, splitLetters(title, .15, .035));
@@ -217,6 +217,7 @@ function viewPlanet({ id }) {
       h("section", { class: "pv-info holo" },
         h("p", { class: "desc" }, p.description),
         h("div", { class: "pv-stats" }, sub.map(t => h("span", { class: "chip chip--accent" }, t)), md === ms.length && ms.length ? h("span", { class: "chip chip--ok" }, "Planeta completado ✓") : null),
+        h("button", { class: "btn btn--sm btn--ghost", onclick: () => encPlanet(id) }, "📖 Ver en la enciclopedia"),
         h("p", { class: "pv-how" }, md === ms.length ? "Has hecho todas sus misiones. Puedes releer sus cartas o seguir el viaje." : "Completa las misiones para abrir las cartas de este planeta."),
         md === ms.length && nextPlanet() ? h("button", { class: "btn btn--primary btn--sm", onclick: () => { const np = nextPlanet(); SFX.jump(); hyperspace(() => go("planet", { id: np })); } }, `Siguiente destino: ${ORDER.indexOf(nextPlanet()) + 1} · ${P[nextPlanet()].name} →`) : null),
       effs.length ? h("div", { style: { display: "grid", gap: "8px" } }, effs.map(e => h("div", { class: "effect" }, h("div", { class: "ic" }, e.effect.kind === "transmission" ? "📡" : e.effect.kind === "hint" ? "🧭" : "✨"), h("div", null, h("b", null, e.effect.title), h("span", null, e.effect.body))))) : null,
@@ -266,6 +267,7 @@ function viewLetters(params) {
 function viewPlanets() {
   const un = unlockedSet(), vis = visitedCount();
   return page("Planetas", ["Descubiertos", `Has visitado ${vis} de ${ORDER.length} sistemas. Cada planeta tiene sus propias misiones y cartas.`],
+    h("button", { class: "enc-banner holo", onclick: () => go("enciclo") }, h("span", { class: "enc-b-ic" }, "📖"), h("span", { class: "grow" }, h("b", null, "Enciclopedia Galáctica"), h("small", null, "Planetas, razas, droides, fauna y porgs de la galaxia")), h("span", { class: "muted" }, "›")),
     h("div", { class: "pcards" }, ORDER.map(pid => {
       const ok = planetUnlocked(pid), ls = lettersOf(pid), got = ls.filter(l => un.has(l.id)).length, ms = MISSIONS[pid], md = ms.filter(m => flag(m.flag)).length;
       return h("button", { class: "pcard", "data-locked": ok ? null : "", onclick: () => { if (!ok) { SFX.bad(); toast("🔒", "Señal cifrada", `Visita ${10 - vis} planetas más para revelar este sistema.`); return; } SFX.jump(); hyperspace(() => go("planet", { id: pid })); } },
@@ -312,12 +314,8 @@ function viewSecrets() {
   return page("Secretos por descubrir", ["Templos Jedi", "Holocrones escondidos, logros con premio y el último holocrón del viaje."],
     h("div", { class: "summary holo" }, h("div", { class: "kind-ic", style: { width: "56px", flex: "none" } }, kindIcon(LBYID["c57"], false)),
       h("div", { class: "grow" }, h("b", null, `${sGot} de ${secrets.length} holocrones abiertos`), h("span", null, `${locked.length} cartas cifradas · ${pending.length} misiones pendientes`))),
-    h("div", { class: "section-t" }, `Guía de porgs · ${porgsFound().length} de 12 razas`),
-    h("p", { class: "muted", style: { margin: 0, fontSize: "13.5px" } }, "Cada planeta tiene su propia raza de porg, escondida en su portada. Búscalos y tócalos para añadirlos a la guía."),
-    h("div", { class: "porg-dex" }, ORDER.map(pid => { const f = porgsFound().includes(pid); return h("button", { class: "pd" + (f ? " f" : ""), onclick: () => porgCard(pid) }, porgEl(46, pid), h("small", null, f ? PORG[pid].n.replace("Porg ", "") : P[pid].name)); })),
-    h("div", { class: "section-t" }, `Habitantes de la galaxia · ${faunaFound().length} de ${FA.ALL.length}`),
-    h("p", { class: "muted", style: { margin: 0, fontSize: "13.5px" } }, "Cada región tiene sus especies y sus droides. Pasean por la portada de cada planeta: tócalos para conocerlos."),
-    h("div", { class: "porg-dex fauna-dex" }, FA.ALL.map(x => { const f = faunaFound().includes(x.id); return h("button", { class: "pd" + (f ? " f" : ""), onclick: () => faunaCard(x) }, FA.svg(x, 46), h("small", null, f ? x.n : P[x.pid].name)); })),
+    h("div", { class: "section-t" }, "Enciclopedia Galáctica"),
+    h("div", { class: "enc-links" }, ENC_TABS.map(([k, t]) => { const [n, tt] = encCounts()[k]; return h("button", { class: "secret-row enc-link", onclick: () => go("enciclo", { tab: k }) }, h("div", { class: "grow" }, h("b", null, t), h("span", null, `${n} de ${tt} descubiertos`)), h("div", { class: "bar", style: { width: "80px" } }, h("i", { style: { width: n / tt * 100 + "%" } }))); })),
     h("div", { class: "section-t" }, "Logros"),
     h("p", { class: "muted", style: { margin: 0, fontSize: "13.5px" } }, `Cada logro reclamado da chispas para los accesorios de ${droidName()}.`),
     achievementsView(),
