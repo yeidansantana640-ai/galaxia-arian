@@ -973,5 +973,5 @@ html[data-wipe=clock]::view-transition-new(root){animation:wipe-clock .7s linear
 .langsw--set{justify-self:start}
 .langsw--set button{font-size:12.5px;padding:10px 16px}
 html.lang-out body{transition:opacity .25s,filter .25s;opacity:0;filter:blur(6px)}
-@media (max-width:420px){.langsw--map button{padding:7px 7px;font-size:10px}}
+@media (max-width:520px){.langsw--map{padding:0;width:44px;height:44px;justify-content:center}.langsw--map button[data-on]{display:none}.langsw--map button{padding:0;width:44px;height:44px;display:grid;place-items:center;font-size:10.5px;color:#fff}}
 .langsw--gate{position:absolute;top:calc(env(safe-area-inset-top,0px) + 16px);right:16px;z-index:5}
