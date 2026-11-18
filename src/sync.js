@@ -42,13 +42,13 @@ async function syncPush(K, doc, keepalive) {
   if (!r.ok) throw new Error("push " + r.status);
 }
 /* --- mezclar dos progresos: nunca se pierde nada de lo conseguido --- */
-const SYNC_FIELDS = ["profile", "tutorialDone", "readLetters", "introSeen", "visited", "story", "lastPlanet", "flags", "counters", "data"];
+const SYNC_FIELDS = ["profile", "tutorialDone", "readLetters", "visited", "story", "lastPlanet", "flags", "counters", "data"];
 function syncLocal() { const o = {}; for (const k of SYNC_FIELDS) o[k] = S[k]; return o; }
 const uniq = a => { const seen = new Set(), out = []; for (const x of a) { const k = typeof x === "object" ? JSON.stringify(x) : x; if (!seen.has(k)) { seen.add(k); out.push(x); } } return out; };
 function syncMerge(a, ta, b, tb) { // a/b: estados; ta/tb: cuándo cambiaron por última vez
   const [N, O] = ta >= tb ? [a, b] : [b, a], m = { ...O, ...N };
   m.profile = N.profile || O.profile;
-  m.introSeen = !!(a.introSeen || b.introSeen); m.tutorialDone = !!(a.tutorialDone || b.tutorialDone);
+  m.tutorialDone = !!(a.tutorialDone || b.tutorialDone);
   m.readLetters = uniq([...(O.readLetters || []), ...(N.readLetters || [])]);
   m.visited = { ...(O.visited || {}), ...(N.visited || {}) };
   m.flags = { ...(O.flags || {}) }; for (const k in N.flags || {}) m.flags[k] = N.flags[k] || m.flags[k];

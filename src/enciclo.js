@@ -65,7 +65,7 @@ function encPlanet(pid) {
   modal(h("div", null, h("div", { class: "eyebrow" }, `Enciclopedia · Planeta ${ORDER.indexOf(pid) + 1} de 12`), h("h2", null, P[pid].name)), [
     h("div", { class: "enc-planet" }, planetEl(pid, 150, { revealed: true, hi: true })),
     h("p", { class: "m-quote", style: { fontSize: "1.2rem" } }, P[pid].tagline),
-    ok ? encRows([["Región", LAYOUT[pid].region], ["Sector", LAYOUT[pid].sector], ["Clima", W[0]], ["Terreno", W[1]], ["Cielo", W[2]], ["Dato curioso", W[3]], ["Cartas", `${got} de ${ls.length} encontradas`]]) : h("p", { class: "m-note", style: { textAlign: "center" } }, "Visita el planeta para completar su ficha."),
+    ok ? encRows([["Región", LAYOUT[pid].region], ["Sector", LAYOUT[pid].sector], ["Clima", W[0]], ["Terreno", W[1]], ["Cielo", W[2]], ["Dato curioso", W[3]], ["Cartas", got ? `${nCartas(got)} ${got === 1 ? "encontrada" : "encontradas"}` : "Por descubrir"]]) : h("p", { class: "m-note", style: { textAlign: "center" } }, "Visita el planeta para completar su ficha."),
     h("div", { class: "section-t" }, "Quién vive aquí"),
     h("div", { class: "enc-who" }, [...who.map(x => { const f = ff.includes(x.id); return h("button", { class: "pd" + (f ? " f" : ""), onclick: () => { closeModals(); x.cat === "raza" ? encRace(x) : faunaCard(x); } }, FA.svg(x, 44), h("small", null, f ? x.n : "¿?")); })]),
     h("div", { class: "m-row" }, h("button", { class: "btn btn--sm btn--primary", onclick: () => { closeModals(); SFX.jump(); hyperspace(() => go("planet", { id: pid })); } }, `🚀 Viajar a ${P[pid].name}`)),

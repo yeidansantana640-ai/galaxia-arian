@@ -98,7 +98,7 @@ function achievements() {
     ["galaxia-2", "Medio camino", "Visita seis planetas.", 5, () => [visitedCount(), 6]],
     ["galaxia-3", "Toda la galaxia", "Visita los doce planetas del mapa.", 8, () => [ORDER.filter(p => S.visited[p]).length, 12]],
     ["galaxia-4", "Lectora de cartas", "Lee diez cartas con calma.", 4, () => [readCount(), 10]],
-    ["galaxia-5", "Mitad de la historia", "Lee treinta cartas.", 6, () => [readCount(), 30]],
+    ["galaxia-5", "Gran lectora", "Lee treinta cartas.", 6, () => [readCount(), 30]],
     ["galaxia-6", "Cada interacción cuenta", "Completa todas las misiones de los doce planetas.", 10, () => [allMap.filter(flag).length, allMap.length]],
     ["galaxia-7", "Cazadora de estrellas", "Reclama diez logros.", 6, () => [claimedN(), 10]],
     ["galaxia-8", "Constelación de logros", "Reclama veinticinco logros.", 10, () => [claimedN(), 25]],
@@ -190,7 +190,7 @@ function openDroid(tab = "hablar") {
       const say = id => {
         let t;
         if (id === "pista") t = droidHint();
-        else if (id === "pendientes") { const un = unlockedSet(), pend = ORDER.filter(planetUnlocked).flatMap(p => MISSIONS[p].filter(m => !flag(m.flag))); t = `Llevas ${un.size} de ${LETTERS.length} cartas. Quedan ${pend.length} misiones y ${claimable()} logros por reclamar.`; }
+        else if (id === "pendientes") { const un = unlockedSet(), pend = ORDER.filter(planetUnlocked).flatMap(p => MISSIONS[p].filter(m => !flag(m.flag))); t = `Llevas ${nCartas(un.size)} encontradas. Quedan ${pend.length} misiones y ${claimable()} logros por reclamar.`; }
         else if (id === "estado") t = fill(pick(D.estado[mood] || D.estado.happy, "e"));
         else t = fill(D[id][Math.floor(Math.random() * D[id].length)]);
         bub.textContent = t; SFX.beep();

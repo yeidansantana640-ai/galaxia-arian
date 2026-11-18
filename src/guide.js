@@ -60,7 +60,7 @@ async function gate(done) {
 function openHelp() {
   const sec = (ic, t, ...p) => h("details", { class: "help-s" }, h("summary", null, h("span", { class: "help-ic" }, ic), h("b", null, t)), h("div", { class: "help-b" }, p.map(x => h("p", null, x))));
   modal(h("div", null, h("div", { class: "eyebrow" }, "Manual del explorador"), h("h2", null, "¿Cómo funciona?")), [
-    h("p", { class: "m-note", style: { margin: 0 } }, `Esta galaxia es un regalo. Hay ${LETTERS.length} cartas escondidas en ${ORDER.length} planetas y el objetivo es encontrarlas todas, ${herName()}, a tu ritmo. No hay prisa ni se pierde nada.`),
+    h("p", { class: "m-note", style: { margin: 0 } }, `Esta galaxia es un regalo. Hay cartas escondidas en sus ${ORDER.length} planetas y el objetivo es encontrarlas todas, ${herName()}, a tu ritmo. No hay prisa ni se pierde nada.`),
     sec("🗺️", "1. El mapa", "Cada planeta tiene un número del 1 al 12: es el orden recomendado del viaje.", "La flecha dorada ▼ y el botón ▶ de arriba a la izquierda te dicen siempre a dónde ir ahora.", "Arrastra con un dedo para moverte y pellizca para acercar. Los botones de la derecha acercan, alejan, centran y muestran toda la galaxia."),
     sec("🪐", "2. Los planetas", "Toca un planeta en el mapa y luego «Saltar al hiperespacio» para viajar.", "Dentro, cada planeta tiene su paisaje y 3 o 4 misiones. La misión marcada con «▶ Empieza aquí» es la siguiente."),
     sec("🎮", "3. Las misiones", "Son pequeños juegos: encender una ciudad, pilotar una nave, descifrar un mensaje, respirar con la Fuerza…", "Al terminar una misión se abren cartas nuevas. Si una misión está bloqueada, te dice qué hacer antes."),

@@ -79,7 +79,7 @@ function hintFor(u) {
     case "all": return u.of.filter(o => !cond(o)).map(hintFor).join(" · ");
     case "any": return "Llega un día 21… o completa todas las misiones de Yavin 4";
     case "counter": return `Lee ${u.min} cartas (llevas ${readCount()})`;
-    case "read-count": return `Lee las otras ${u.min} cartas (llevas ${Math.min(readCount(), u.min)})`;
+    case "read-count": return "Lee todas las demás cartas de la galaxia";
   }
   return "Sigue explorando";
 }
@@ -90,6 +90,12 @@ function letterCard(l, un) {
     h("div", { class: "grow" }, h("b", null, ok ? l.title : "Señal cifrada"), h("span", null, ok ? `${kindOf(l).name} · ${CAT[l.category]}${lang ? " · " + lang : ""}` : hintFor(l.unlock))),
     ok && fav ? h("span", { class: "fav", "aria-label": "Favorita" }, "★") : null,
     ok && !read ? h("span", { class: "new", "aria-label": "Sin leer" }) : null);
+}
+
+function mysteryCard(missionsDone) {
+  return h("div", { class: "lcard lcard--mystery", "aria-label": "Señales cifradas" },
+    h("div", { class: "lk kind-ic" }, kindIcon(LBYID["c57"], true)),
+    h("div", { class: "grow" }, h("b", null, "Señales cifradas"), h("span", null, missionsDone ? "Algunas transmisiones llegan con el tiempo. Sigue explorando la galaxia." : "Completa las misiones para descubrir qué más se esconde aquí.")));
 }
 
 /* ================= letter reader ================= */
@@ -117,7 +123,7 @@ function openLetter(id, fromList, noFinale) {
       return h("p", null, p);
     }),
     h("div", { class: "rule" }),
-    h("div", { class: "stamp", style: { display: "flex", justifyContent: "space-between", gap: "8px", flexWrap: "wrap" } }, h("span", null, `${P[l.planet].name} · ${CAT[l.category]}`), h("span", null, `Carta ${l.n || LETTERS.indexOf(l) + 1} de ${LETTERS.length}`)));
+    h("div", { class: "stamp", style: { display: "flex", justifyContent: "space-between", gap: "8px", flexWrap: "wrap" } }, h("span", null, `${P[l.planet].name} · ${CAT[l.category]}`), h("span", null, kindOf(l).name)));
   const art = h("figure", { class: "scene-fig scene--" + K.k, html: SC.html(l.n) }); art.append(h("figcaption", null, SC.cap(l.n)));
   const intro = K.k === "holocron" ? h("div", null, h("div", { class: "cube" + (firstTime ? " opening" : "") }, h("div", { class: "cube-in" }, [1, 2, 3, 4, 5, 6].map(() => h("i"))))) :
     null;
@@ -189,7 +195,7 @@ function viewPlanet({ id }) {
   ambience(id);
   const L = LOOK[id], ms = MISSIONS[id] || [], un = unlockedSet(), ls = lettersOf(id), got = ls.filter(l => un.has(l.id)).length, md = ms.filter(m => flag(m.flag)).length;
   const effs = activeEffects().filter(e => e.effect.planet === id);
-  const sub = [`${got}/${ls.length} cartas`, `${md}/${ms.length} misiones`];
+  const sub = [got ? nCartas(got) + (got === 1 ? " encontrada" : " encontradas") : "Cartas por descubrir", `${md}/${ms.length} misiones`];
   return h("div", { class: "pv", style: { "--atm": L.atm } },
     ambientLayer(id),
     h("div", { class: "pv-inner" },
@@ -208,8 +214,8 @@ function viewPlanet({ id }) {
         return h("button", { class: "mission holo", "data-done": dn ? "" : null, "data-first": isFirst ? "" : null, "data-locked": av ? null : "", onclick: () => { SFX.tap(); openMission(m); } },
           h("div", { class: "mi" }, dn ? "✓" : m.ic), h("div", { class: "grow" }, isFirst ? h("span", { class: "chip chip--gold", style: { marginBottom: "4px" } }, "▶ Empieza aquí") : null, h("b", null, `${i + 1}. ${m.t}`), h("span", null, av ? m.d : "🔒 " + m.reqText), nL ? h("small", { class: "mi-l" }, `✉ Abre ${nL} carta${nL > 1 ? "s" : ""}`) : null), h("span", { class: dn ? "chip chip--ok" : isFirst ? "chip chip--gold" : "chip" }, dn ? "Hecha" : av ? "Jugar" : "Bloqueada"));
       }); })()),
-      h("div", { class: "section-t" }, `Cartas de este planeta · ${got}/${ls.length}`),
-      h("div", { class: "lcards" }, ls.map(l => letterCard(l, un))),
+      h("div", { class: "section-t" }, got ? `Cartas de este planeta · ${got}` : "Cartas de este planeta"),
+      h("div", { class: "lcards" }, ls.filter(l => un.has(l.id)).map(l => letterCard(l, un)), ls.some(l => !un.has(l.id)) ? mysteryCard(md === ms.length) : null),
       orbiCard(),
       (() => { const n = Object.keys(DATA2.npcs).find(k => DATA2.npcs[k].where === p.name); return n ? npcCard(n) : null; })(),
       h("button", { class: "btn", onclick: () => { MAP.select && setTimeout(() => MAP.select(id), 300); go("map"); } }, "Ver en el mapa")));
@@ -220,24 +226,24 @@ function viewLetters(params) {
   const un = unlockedSet(); let filter = params.f || (params.planet ? "all" : "all");
   const list = h("div", { style: { display: "grid", gap: "14px" } });
   const seg = h("div", { class: "seg", role: "group", "aria-label": "Filtro" });
-  const opts = [["all", "Todas"], ["fav", "Favoritas ★"], ["unread", "Por leer"], ["locked", "Bloqueadas"]];
+  const opts = [["all", "Todas"], ["fav", "Favoritas ★"], ["unread", "Por leer"]];
   const drawSeg = () => seg.replaceChildren(...opts.map(([k, t]) => h("button", { "aria-pressed": filter === k ? "true" : "false", onclick: () => { filter = k; SFX.tap(); drawSeg(); draw(); } }, t)));
   const draw = () => {
     const f = favs(); const planets = params.planet ? [params.planet] : ORDER;
     const groups = planets.map(pid => {
-      let ls = lettersOf(pid);
+      const all = lettersOf(pid); let ls = all.filter(l => un.has(l.id));
       if (filter === "fav") ls = ls.filter(l => f.includes(l.id) && un.has(l.id));
       if (filter === "unread") ls = ls.filter(l => un.has(l.id) && !S.readLetters.includes(l.id));
-      if (filter === "locked") ls = ls.filter(l => !un.has(l.id));
-      if (!ls.length) return null;
-      return h("section", { style: { display: "grid", gap: "10px" } }, h("div", { class: "section-t" }, h("span", { style: { width: "10px", height: "10px", borderRadius: "50%", background: LOOK[pid].atm, boxShadow: `0 0 8px ${LOOK[pid].atm}` } }), P[pid].name), h("div", { class: "lcards" }, ls.map(l => letterCard(l, un))));
+      const hidden = filter === "all" && all.some(l => !un.has(l.id)) && planetUnlocked(pid);
+      if (!ls.length && !hidden) return null;
+      return h("section", { style: { display: "grid", gap: "10px" } }, h("div", { class: "section-t" }, h("span", { style: { width: "10px", height: "10px", borderRadius: "50%", background: LOOK[pid].atm, boxShadow: `0 0 8px ${LOOK[pid].atm}` } }), P[pid].name), h("div", { class: "lcards" }, ls.map(l => letterCard(l, un)), hidden ? mysteryCard() : null));
     }).filter(Boolean);
     list.replaceChildren(...(groups.length ? groups : [h("div", { class: "empty" }, filter === "fav" ? "Aún no hay favoritas. Abre una carta y toca ☆ para guardarla aquí." : filter === "unread" ? "Lo has leído todo. ✨" : "Nada por aquí.")]));
   };
   drawSeg(); draw();
   const got = un.size, read = S.readLetters.filter(id => un.has(id)).length;
   return page(params.planet ? "Cartas de " + P[params.planet].name : "Archivo de cartas", ["Colección", "Transmisiones holográficas, documentos del Archivo Jedi y holocrones secretos. Todo lo que has encontrado está aquí."],
-    h("div", { class: "summary holo" }, h("div", { class: "ring", style: { "--p": Math.round(got / LETTERS.length * 100) } }, h("span", null, Math.round(got / LETTERS.length * 100) + "%")), h("div", { class: "grow" }, h("b", null, `${got} de ${LETTERS.length} cartas encontradas`), h("span", null, `${read} leídas · ${favs().length} favoritas`))),
+    h("div", { class: "summary holo" }, h("div", { class: "kind-ic", style: { width: "56px", flex: "none" } }, kindIcon(LBYID["c01"], false)), h("div", { class: "grow" }, h("b", null, got ? `${nCartas(got)} ${got === 1 ? "encontrada" : "encontradas"}` : "Aún no hay cartas"), h("span", null, `${read} ${read === 1 ? "leída" : "leídas"} · ${favs().length} ${favs().length === 1 ? "favorita" : "favoritas"} · y quedan más escondidas en la galaxia`))),
     params.planet ? h("button", { class: "btn btn--ghost btn--sm", onclick: () => go("letters") }, "Ver todas las cartas") : npcCard("archivista"),
     seg,
     h("div", { class: "m-row", style: { justifyContent: "flex-start" } }, [["holo", "Transmisión", "c01"], ["archive", "Archivo Jedi", "c11"], ["holocron", "Holocrón", "c57"]].map(([k, t, id]) => h("span", { class: "chip chip--kind" }, h("span", { class: "kind-ic mini" }, kindIcon(LBYID[id], false)), t))),
@@ -253,8 +259,8 @@ function viewPlanets() {
       const ok = planetUnlocked(pid), ls = lettersOf(pid), got = ls.filter(l => un.has(l.id)).length, ms = MISSIONS[pid], md = ms.filter(m => flag(m.flag)).length;
       return h("button", { class: "pcard", "data-locked": ok ? null : "", onclick: () => { if (!ok) { SFX.bad(); toast("🔒", "Señal cifrada", `Visita ${10 - vis} planetas más para revelar este sistema.`); return; } SFX.jump(); hyperspace(() => go("planet", { id: pid })); } },
         h("div", { class: "pp" }, planetEl(pid, 64, { revealed: ok && S.visited[pid] })),
-        h("b", null, ok ? P[pid].name : "¿?"), h("span", null, ok ? (S.visited[pid] ? `${got}/${ls.length} cartas · ${md}/${ms.length} misiones` : "Sin explorar") : "Más allá del mapa"),
-        h("div", { class: "bar" }, h("i", { style: { width: (ok ? (got + md) / (ls.length + ms.length) * 100 : 0) + "%" } })));
+        h("b", null, ok ? P[pid].name : "¿?"), h("span", null, ok ? (S.visited[pid] ? `${nCartas(got)} · ${md}/${ms.length} misiones` : "Sin explorar") : "Más allá del mapa"),
+        h("div", { class: "bar" }, h("i", { style: { width: (ok ? md / ms.length * 100 : 0) + "%" } })));
     })));
 }
 
@@ -294,7 +300,7 @@ function viewSecrets() {
   const pending = ORDER.filter(planetUnlocked).flatMap(pid => MISSIONS[pid].filter(m => !flag(m.flag)));
   return page("Secretos por descubrir", ["Templos Jedi", "Holocrones escondidos, logros con premio y el último holocrón del viaje."],
     h("div", { class: "summary holo" }, h("div", { class: "kind-ic", style: { width: "56px", flex: "none" } }, kindIcon(LBYID["c57"], false)),
-      h("div", { class: "grow" }, h("b", null, `${sGot} de ${secrets.length} holocrones abiertos`), h("span", null, `${locked.length} cartas cifradas · ${pending.length} misiones pendientes`))),
+      h("div", { class: "grow" }, h("b", null, `${sGot} de ${secrets.length} holocrones abiertos`), h("span", null, locked.length ? `Quedan cartas cifradas · ${pending.length} misiones pendientes` : `${pending.length} misiones pendientes`))),
     h("div", { class: "section-t" }, "Enciclopedia Galáctica"),
     h("div", { class: "enc-links" }, ENC_TABS.map(([k, t]) => { const [n, tt] = encCounts()[k]; return h("button", { class: "secret-row enc-link", onclick: () => go("enciclo", { tab: k }) }, h("div", { class: "grow" }, h("b", null, t), h("span", null, `${n} de ${tt} descubiertos`)), h("div", { class: "bar", style: { width: "80px" } }, h("i", { style: { width: n / tt * 100 + "%" } }))); })),
     h("div", { class: "section-t" }, "Logros"),
@@ -303,8 +309,7 @@ function viewSecrets() {
     h("div", { class: "section-t" }, "Holocrones"),
     h("div", { class: "lcards" }, secrets.map(l => letterCard(l, un))),
     h("div", { class: "section-t" }, "El último holocrón"),
-    (() => { const rc = readCount(), fin = LBYID.c57, ok = un.has("c57"); return h("div", { class: "secret-row" }, h("div", { class: "kind-ic", style: { width: "44px" } }, kindIcon(fin, !ok)), h("div", { class: "grow" }, h("b", null, ok ? fin.title : "Un holocrón sellado en Yavin 4"), h("span", null, ok ? "Ya puedes abrirlo." : `Se abre al leer las otras 56 cartas (llevas ${Math.min(rc, 56)}).`)), ok ? h("div", { style: { display: "grid", gap: "6px" } }, h("button", { class: "btn btn--sm btn--gold", onclick: () => openLetter("c57") }, "Abrir"), S.readLetters.includes("c57") ? h("button", { class: "btn btn--sm btn--ghost", onclick: () => playFinale(() => openLetter("c57", null, true)) }, "▶ Ver el final") : null) : null); })(),
-    h("div", { class: "bar" }, h("i", { style: { width: Math.min(100, readCount() / 56 * 100) + "%" } })),
+    (() => { const rc = readCount(), fin = LBYID.c57, ok = un.has("c57"); return h("div", { class: "secret-row" }, h("div", { class: "kind-ic", style: { width: "44px" } }, kindIcon(fin, !ok)), h("div", { class: "grow" }, h("b", null, ok ? fin.title : "Un holocrón sellado en Yavin 4"), h("span", null, ok ? "Ya puedes abrirlo." : "Se abre cuando hayas leído todas las demás cartas.")), ok ? h("div", { style: { display: "grid", gap: "6px" } }, h("button", { class: "btn btn--sm btn--gold", onclick: () => openLetter("c57") }, "Abrir"), S.readLetters.includes("c57") ? h("button", { class: "btn btn--sm btn--ghost", onclick: () => playFinale(() => openLetter("c57", null, true)) }, "▶ Ver el final") : null) : null); })(),
     h("div", { class: "section-t" }, "Pistas del droide"),
     pending.length ? h("div", { style: { display: "grid", gap: "8px" } }, pending.slice(0, 8).map(m => h("button", { class: "secret-row", style: { textAlign: "left", cursor: "pointer", color: "inherit", font: "inherit" }, onclick: () => go("planet", { id: m.pid }) }, h("div", { style: { fontSize: "22px" } }, m.ic), h("div", { class: "grow" }, h("b", null, m.t), h("span", null, P[m.pid].name + (missionAvailable(m) ? "" : " · 🔒 " + m.reqText))), h("span", { class: "muted" }, "›"))),
       pending.length > 8 ? h("p", { class: "muted", style: { margin: 0, fontSize: "13px", textAlign: "center" } }, `Y ${pending.length - 8} misiones más repartidas por la galaxia.`) : null) : h("div", { class: "empty" }, "Has completado todas las misiones. Que la Fuerza te acompañe. ✨"));
@@ -384,6 +389,25 @@ function starfield(cv, warp) {
   const st = Array.from({ length: 300 }, () => ({ x: Math.random(), y: Math.random(), s: Math.random() * 1.5 + .3, p: Math.random() * 6 }));
   let t = 0; (function fr() { if (!cv.isConnected) return; t++; g.fillStyle = "#000"; g.fillRect(0, 0, W, H); for (const s0 of st) { g.globalAlpha = .4 + .6 * Math.abs(Math.sin(t * .01 + s0.p)); g.fillStyle = "#fff"; g.fillRect(s0.x * W, s0.y * H, s0.s, s0.s); } g.globalAlpha = 1; requestAnimationFrame(fr); })();
 }
+/* entrada corta: cada vez que se abre la galaxia */
+function playSplash(done) {
+  if (reduced()) return done();
+  const cv = h("canvas"), stg = h("div", { class: "intro-stage" });
+  const el = h("div", { class: "intro splash", role: "dialog", "aria-label": "Entrada" }, cv, stg, h("div", { class: "i-foot" }, h("button", { class: "i-skip", onclick: e => { e.stopPropagation(); end(); } }, "Saltar")));
+  document.body.append(el); starfield(cv);
+  let gone = false; const tms = [];
+  const end = () => { if (gone) return; gone = true; tms.forEach(clearTimeout); el.classList.add("out"); setTimeout(() => el.remove(), 650); done && done(); };
+  stg.replaceChildren(h("p", { class: "longago" }, "Hace no tanto tiempo, en una isla no muy, muy lejana…"));
+  tms.push(setTimeout(() => {
+    stg.replaceChildren(h("div", { class: "i-title" },
+      h("div", { class: "sp-planet" }, planetEl(S.lastPlanet && P[S.lastPlanet] ? S.lastPlanet : "naboo", 96)),
+      h("h1", { class: "i-sw" }, "STAR WARS"), h("p", { class: "i-sub" }, "La galaxia de " + herName()),
+      h("div", { class: "sp-saber" })));
+    try { SFX.saber(); } catch (e) { }
+  }, 2600));
+  tms.push(setTimeout(end, 5600));
+  el.addEventListener("click", end);
+}
 function playIntro(done) {
   const cv = h("canvas"), stg = h("div", { class: "intro-stage" }), dots = h("div", { class: "dots", style: { width: "90px" } });
   const el = h("div", { class: "intro", role: "dialog", "aria-label": "Introducción" }, cv, stg, h("div", { class: "i-foot" }, dots, h("p", { class: "i-hint" }, "Toca para continuar"), h("button", { class: "i-skip", onclick: e => { e.stopPropagation(); end(); } }, "Saltar")));
@@ -428,7 +452,7 @@ function whatsNew(after) {
   const close = modal(h("div", null, h("div", { class: "eyebrow" }, "Transmisión prioritaria"), h("h2", null, "Cartas entre las estrellas")), [
     h("div", { class: "projector" }, droidSVG((S.profile && S.profile.droid) || "chispa", 50), h("div", { class: "beam", style: { height: "30px" } })),
     h("div", { class: "paper paper--holo", style: { padding: "18px" } },
-      h("p", { style: { fontSize: "1.15rem" } }, `${herName()}, han llegado ${LETTERS.length} cartas nuevas a la galaxia.`),
+      h("p", { style: { fontSize: "1.15rem" } }, `${herName()}, han llegado cartas nuevas a la galaxia.`),
       h("p", { style: { fontSize: "1.05rem", fontFamily: "var(--f-body)" } }, "✉️ Cada una habla de un momento de Star Wars y tiene su propia ilustración."),
       h("p", { style: { fontSize: "1.05rem", fontFamily: "var(--f-body)" } }, "🪐 Dos planetas nuevos en el mapa: Dagobah y Yavin 4."),
       h("p", { style: { fontSize: "1.05rem", fontFamily: "var(--f-body)" } }, "🗺️ Sigue el orden del 1 al 12: la flecha dorada te dice dónde ir."),
@@ -450,7 +474,7 @@ function boot() {
     setTimeout(() => whatsNew(tour), 2000);
   };
   const afterIntro = () => S.profile ? start() : setup(start);
-  gate(async () => { await syncBoot(); if (!S.introSeen) playIntro(afterIntro); else afterIntro(); });
+  gate(async () => { await syncBoot(); if (!S.introSeen) playIntro(afterIntro); else playSplash(afterIntro); });
   addEventListener("pagehide", () => { rememberRoute(); try { localStorage.setItem(KEY, JSON.stringify({ state: { ...S, wizard: null }, version: 3 })); } catch (e) { } });
 }
 document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", boot) : boot();

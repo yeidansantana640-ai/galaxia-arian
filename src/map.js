@@ -293,7 +293,7 @@ const MAP = (() => {
       h("div", { class: "sheet-h" }, h("div", { class: "mini" }, planetEl(pid, 62, { revealed: true })), h("div", { class: "grow" }, h("h2", null, p.name), h("p", null, p.tagline))),
       h("p", { class: "m-note", style: { fontSize: "13.5px", margin: 0 } }, p.description),
       h("div", { class: "sheet-stats" },
-        h("div", { class: "stat" }, h("b", null, `${got}/${ls.length}`), h("span", null, "Cartas")),
+        h("div", { class: "stat" }, h("b", null, `${got}`), h("span", null, got === 1 ? "Carta" : "Cartas")),
         h("div", { class: "stat" }, h("b", null, `${read}`), h("span", null, "Leídas")),
         h("div", { class: "stat" }, h("b", null, `${md}/${ms.length}`), h("span", null, "Misiones"))),
       h("div", { class: "sheet-actions" },
@@ -322,7 +322,7 @@ const MAP = (() => {
       n.toggleAttribute("data-next", pid === nx); n.toggleAttribute("data-locked", !planetUnlocked(pid));
       lb.toggleAttribute("data-next", pid === nx); lb.toggleAttribute("data-done", !!done);
       const un = unlockedSet(), ls = lettersOf(pid), got = ls.filter(l => un.has(l.id)).length;
-      lb.querySelector("small").textContent = !planetUnlocked(pid) ? "Se revela al visitar 10" : pid === nx ? (S.visited[pid] ? "▶ Sigue aquí" : "▶ Ve aquí") : done ? "Completado ✓" : S.visited[pid] ? `${got}/${ls.length} cartas` : "Sin explorar";
+      lb.querySelector("small").textContent = !planetUnlocked(pid) ? "Se revela al visitar 10" : pid === nx ? (S.visited[pid] ? "▶ Sigue aquí" : "▶ Ve aquí") : done ? "Completado ✓" : S.visited[pid] ? nCartas(got) : "Sin explorar";
       lb.querySelector("b").textContent = `${ORDER.indexOf(pid) + 1} · ` + (planetUnlocked(pid) ? P[pid].name : "¿?");
       n.querySelector(".numtag").textContent = ORDER.indexOf(pid) + 1;
       lb._w = 0;

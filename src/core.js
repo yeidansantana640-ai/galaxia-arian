@@ -163,6 +163,7 @@ function letterUnlocked(l) {
 function rememberDay(id) { const s = getData("seenUnlock", []); if (!s.includes(id)) S.data.seenUnlock = [...s, id]; }
 const unlockedSet = () => new Set(LETTERS.filter(letterUnlocked).map(l => l.id));
 const lettersOf = pid => LETTERS.filter(l => l.planet === pid);
+const nCartas = n => n === 1 ? "1 carta" : n + " cartas";
 function planetUnlocked(pid) {
   return !!P[pid];
 }
