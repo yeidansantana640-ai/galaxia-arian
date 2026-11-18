@@ -2,7 +2,7 @@
 let route = { name: "map", params: {} }, viewEl, tabbar, droidFab, droidBubble;
 const TABS = [["map", "Mapa", "map"], ["letters", "Cartas", "cards"], ["planets", "Planetas", "planets"], ["memories", "Recuerdos", "memories"], ["secrets", "Secretos", "secrets"]];
 function go(name, params = {}, push = true) {
-  closeModals();
+  closeModals(); droidBubble && droidBubble.remove();
   if (push) try { history.pushState({ name, params }, ""); } catch (e) { }
   route = { name, params }; render(); window.scrollTo(0, 0); rememberRoute();
 }

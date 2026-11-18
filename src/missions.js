@@ -181,7 +181,7 @@ const KINDS = {
     const list = h("div", { style: { display: "grid", gap: "8px" } });
     const draw = () => list.replaceChildren(...getData(m.key, []).slice().reverse().map(e => h("div", { class: "secret-row" }, h("div", { class: "grow" }, h("span", null, new Date(e.at).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })), h("b", { style: { fontWeight: 400, fontFamily: "var(--f-letter)", fontSize: "1.15rem" } }, e.text)))));
     const b = h("button", { class: "btn btn--primary", onclick: () => { const v = ta.value.trim(); if (!v) { ta.focus(); return; } setData(m.key, [...getData(m.key, []), { text: v, at: new Date().toISOString() }]); ta.value = ""; draw(); fin(m.key === "capsule" ? "Cápsula sellada. La encontrarás en «Recuerdos»." : "Guardado en el holodiario. Lo verás también en «Recuerdos»."); } }, m.btn);
-    draw(); box.append(ta, b, entries.length ? h("div", { class: "section-t" }, "Guardado") : null, list);
+    draw(); box.append(ta, b); if (entries.length) box.append(h("div", { class: "section-t" }, "Guardado")); box.append(list);
     if (entries.length && !flag(m.flag)) fin();
   },
   trips(box, m, fin) {
@@ -443,12 +443,12 @@ const KINDS = {
   },
   pano(box, m, fin) {
     const wrap = h("div", { style: { overflowX: "auto", borderRadius: "18px", border: "1px solid var(--hair2)", scrollbarWidth: "none" } });
-    const st = h("div", { style: { position: "relative", width: "300%", height: "240px", background: "linear-gradient(180deg,#ff9fb8,#ffd6a8 60%,#fff0e0)" } });
+    const st = h("div", { class: "pano", style: { position: "relative", width: "300%", height: "240px", background: "linear-gradient(180deg,#ff9fb8,#ffd6a8 60%,#fff0e0)" } });
     for (let i = 0; i < 14; i++) st.append(h("div", { style: { position: "absolute", left: i * 7.4 + "%", top: (50 + Math.sin(i) * 12) + "%", width: "18%", height: "60px", borderRadius: "40px", background: "rgba(255,255,255,.65)", filter: "blur(4px)" } }));
     const marks = [["🏛️", 14, 40, "Mirador del Este"], ["🗼", 52, 30, "Torre de las nubes"], ["🎡", 86, 46, "La noria del oeste"]]; let got = 0;
     for (const [e, x, y, n] of marks) { const b = h("button", { class: "it", "aria-label": n, style: { left: x + "%", top: y + "%", fontSize: "34px" } }, e); b.onclick = () => { if (b.dataset.g) return; b.dataset.g = 1; b.append(h("div", { class: "chip chip--gold", style: { position: "absolute", top: "100%", whiteSpace: "nowrap" } }, n)); got++; SFX.good(); lab.textContent = `${got} / 3 miradores`; if (got === 3) fin("Desde aquí se ve toda la ciudad. Y en cada mirador, una excusa para pensar en ti."); }; st.append(b); }
     wrap.append(st);
-    const lab = h("p", { class: "m-note", style: { textAlign: "center" } }, "Desliza la vista a los lados. 0 / 3 miradores");
+    const lab = h("p", { class: "m-note", style: { textAlign: "center" } }, "← Desliza la vista a los lados → · 0 / 3 miradores");
     box.append(wrap, lab);
   },
   tulip(box, m, fin) {

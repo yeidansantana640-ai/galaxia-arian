@@ -227,9 +227,9 @@ html[data-accent=blanco] .btn--primary{background:linear-gradient(180deg,#fff,#c
 /* mission stages */
 .stage{position:relative;width:100%;aspect-ratio:4/3;border-radius:18px;overflow:hidden;border:1px solid var(--hair2);touch-action:manipulation;user-select:none;-webkit-user-select:none}
 .stage--tall{aspect-ratio:3/4}
-.stage .it{position:absolute;transform:translate(-50%,-50%);min-width:44px;min-height:44px;display:grid;place-items:center;background:none;border:0;padding:0;font-size:26px;cursor:pointer;transition:transform .3s,opacity .4s}
-.stage .it:active{transform:translate(-50%,-50%) scale(.9)}
-.stage .it[data-got]{opacity:.15;pointer-events:none;transform:translate(-50%,-50%) scale(1.6)}
+.stage .it,.pano .it{position:absolute;transform:translate(-50%,-50%);min-width:44px;min-height:44px;display:grid;place-items:center;background:none;border:0;padding:0;font-size:26px;cursor:pointer;transition:transform .3s,opacity .4s}
+.stage .it:active,.pano .it:active{transform:translate(-50%,-50%) scale(.9)}
+.stage .it[data-got],.pano .it[data-got]{opacity:.15;pointer-events:none;transform:translate(-50%,-50%) scale(1.6)}
 .m-note{margin:0;color:var(--ink2);font-size:14.5px}
 .m-quote{margin:0;font-family:var(--f-letter);font-size:1.35rem;line-height:1.45;text-align:center;color:var(--ink);text-wrap:balance}
 .m-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
@@ -638,3 +638,14 @@ textarea.field{min-height:110px;resize:vertical}
 .coin-fly{position:fixed;z-index:200;pointer-events:none;color:var(--gold);font-size:18px;font-weight:700;text-shadow:0 0 10px rgba(255,200,100,.9)}
 .lite .shop-droid,.lite .shop-coin{animation:none}
 .droid-fab[data-news]::after{content:"!";position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:var(--gold);color:#1c1200;font:700 13px/20px var(--f-body);text-align:center;box-shadow:0 0 12px rgba(255,200,100,.8);animation:breathe 1.6s ease-in-out infinite}
+/* desktop: use the width */
+@media (min-width:900px){
+  .pv-inner{max-width:1040px}
+  .pv-hero .big{width:220px}
+  .missions,.lcards{grid-template-columns:1fr 1fr}
+  .view>.page{max-width:920px}
+  .pcards{grid-template-columns:repeat(4,1fr)}
+  .reader-in{max-width:720px}
+  .modal-card{max-width:680px}
+}
+@media (min-width:1300px){.pcards{grid-template-columns:repeat(6,1fr)}}
