@@ -189,32 +189,100 @@ function adminPrompt() {
     h("form", { class: "gate-form", onsubmit: e => { e.preventDefault(); if (adminCode(inp.value)) { close(); SFX.saber(); setAdmin(true); toast("⚙", "Modo administrador activado", "Todo está desbloqueado en este dispositivo."); setTimeout(adminPanel, 400); } else { SFX.bad(); msg.textContent = "Código incorrecto."; inp.select(); } } }, inp, h("button", { class: "btn btn--primary", type: "submit" }, "Entrar")), msg], null, "⚙");
   setTimeout(() => inp.focus(), 80);
 }
-function adminPanel() {
+let adminTab = "escenas";
+function adminPanel(tab) {
   if (!isAdmin()) return adminPrompt();
-  const d = dget();
+  if (tab) adminTab = tab;
+  const body = h("div", { style: { display: "grid", gap: "12px" } });
+  const close = modal(h("div", null, h("div", { class: "eyebrow" }, "Solo para Yeidan · centro de control"), h("h2", null, "Panel de administrador")), [body], null, "⚙");
   const btn = (t, f, cls = "btn btn--sm") => h("button", { class: cls, onclick: f }, t);
-  const close = modal(h("div", null, h("div", { class: "eyebrow" }, "Solo para Yeidan"), h("h2", null, "Panel de administrador")), [
-    h("p", { class: "muted", style: { margin: 0, fontSize: "13.5px" } }, "Con el modo administrador todo está abierto en este dispositivo y leer cartas no cuenta como leídas. No afecta al móvil de Arián: cada dispositivo guarda su propio progreso."),
-    h("div", { class: "section-t" }, "Ver escenas"),
-    h("div", { class: "m-row", style: { justifyContent: "flex-start" } },
-      btn("▶ Contraseña de entrada", () => { close(); try { localStorage.removeItem(GATE_KEY); localStorage.removeItem(KKEY); } catch (e) { } gate(() => { }); }),
-      btn("▶ Introducción", () => { close(); playIntro(() => { }); }),
-      btn("▶ Visita guiada", () => { close(); go("map"); setTimeout(startTour, 700); }),
-      btn("▶ Mensaje de novedades", () => { close(); setData("v3seen", false); const r = S.readLetters; whatsNewForce(); }),
-      btn("▶ Final del viaje", () => { close(); playFinale(() => openLetter("c57", null, true)); }, "btn btn--sm btn--gold")),
-    h("div", { class: "section-t" }, "Ir a un planeta"),
-    h("div", { class: "admin-planets" }, ORDER.map((pid, i) => h("button", { class: "admin-p", onclick: () => { close(); go("planet", { id: pid }); } }, planetEl(pid, 40), h("span", null, `${i + 1}. ${P[pid].name}`)))),
-    h("div", { class: "section-t" }, `Las ${LETTERS.length} cartas`),
-    h("div", { class: "admin-letters" }, ORDER.map(pid => h("div", null, h("b", null, P[pid].name), h("div", { class: "m-row", style: { justifyContent: "flex-start", gap: "6px" } }, lettersOf(pid).map(l => h("button", { class: "admin-l", title: l.title, onclick: () => { close(); openLetter(l.id, lettersOf(pid), true); } }, l.n)))))),
-    h("div", { class: "section-t" }, "Probar el juego"),
-    h("div", { class: "m-row", style: { justifyContent: "flex-start" } },
-      btn("✓ Completar todas las misiones", () => { for (const p of ORDER) for (const m of MISSIONS[p]) S.flags = { ...S.flags, [m.flag]: true }; for (const p of ORDER) S.visited = { ...S.visited, [p]: true }; emit(); toast("✓", "Misiones completadas", "Todas las misiones y planetas marcados."); }),
-      btn("✦ +50 chispas", () => { dset({ cred: dget().cred + 50 }); toast("✦", "+50 chispas", `Ahora tienes ${dget().cred}.`); }),
-      btn("🤖 Amistad al máximo", () => { dset({ xp: 200 }); toast("🤖", "Amistad nivel 10", "Todos los accesorios disponibles."); }),
-      btn("🔵 Hacer aparecer a Orbi", () => { dset({ sphereOn: null }); toast("🔵", "Orbi está de camino", "Aparecerá en el próximo planeta que visites."); }),
-      btn("↺ Reiniciar progreso de este dispositivo", () => { if (!confirm("¿Borrar el progreso de ESTE dispositivo? (cartas, misiones, droide). El de Arián no se toca.")) return; Object.assign(S, { readLetters: [], visited: {}, flags: {}, counters: {}, lastPlanet: null, data: { v3seen: true, tourDone: true } }); emit(); close(); go("map"); toast("↺", "Progreso reiniciado", "Este dispositivo empieza de cero."); }, "btn btn--sm btn--ghost")),
-    h("div", { class: "section-t" }, "Salir"),
-    btn("Salir del modo administrador", () => { close(); setAdmin(false); toast("⚙", "Modo administrador desactivado", "La galaxia vuelve a funcionar como para Arián."); }, "btn"),
-  ], null, "⚙");
+  const row = (...k) => h("div", { class: "m-row", style: { justifyContent: "flex-start" } }, ...k);
+  const sec = t => h("div", { class: "section-t" }, t);
+  const run = f => () => { close(); setTimeout(f, 120); };
+  const ok = (t, b) => { toast("⚙", t, b || "Hecho."); draw(); };
+  const TABS = [["escenas", "🎬 Escenas"], ["planetas", "🪐 Planetas"], ["cartas", "✉️ Cartas"], ["droide", "🤖 Droide"], ["progreso", "🏅 Progreso"], ["ajustes", "⚙ Ajustes"]];
+  function draw() {
+    const d = dget(), tabs = h("div", { class: "admin-tabs" }, TABS.map(([k, t]) => h("button", { "aria-pressed": adminTab === k ? "true" : "false", onclick: () => { adminTab = k; SFX.tap(); draw(); } }, t)));
+    let pane;
+    if (adminTab === "escenas") pane = [
+      sec("Inicio"),
+      row(btn("🔒 Contraseña de entrada", run(() => { try { localStorage.removeItem(GATE_KEY); localStorage.removeItem(KKEY); } catch (e) { } gate(() => { }); })),
+        btn("▶ Introducción completa", run(() => playIntro(() => { }))),
+        btn("🪪 Registro de piloto (nombre, sable, droide)", run(() => setup(() => go("map"))))),
+      sec("Ayuda"),
+      row(btn("🧭 Visita guiada", run(() => { go("map"); setTimeout(startTour, 700); })), btn("❔ Manual «¿Cómo funciona?»", run(openHelp)), btn("📡 Mensaje de novedades", run(whatsNewForce)), btn("👋 Bienvenida de vuelta", run(() => { setData("lastSeen", new Date(Date.now() - 2 * 864e5).toISOString()); welcomeBack(); }))),
+      sec("Efectos"),
+      row(btn("🚀 Salto al hiperespacio", run(() => { SFX.jump(); hyperspace(() => { }); })), btn("✨ Celebración", run(() => celebrate())), btn("🎺 Fanfarria", () => fanfare()), btn("⚔️ Sable", () => SFX.saber()), btn("🔔 Aviso de prueba", () => toast("📡", "Nueva transmisión holográfica", "Así se ven los avisos que recibe Arián.")), btn("🤖 Frase del droide", run(() => droidSay(droidHint())))),
+      sec("El final"),
+      row(btn("◈ Final del viaje + último holocrón", run(() => playFinale(() => openLetter("c57", null, true))), "btn btn--sm btn--gold"), btn("◈ Solo la carta 57", run(() => openLetter("c57", null, true)))),
+    ];
+    else if (adminTab === "planetas") pane = [
+      sec("Mapa"),
+      row(btn("🗺️ Ir al mapa", run(() => go("map"))), btn("🌌 Ver toda la galaxia", run(() => { go("map"); setTimeout(() => MAP.fitAll(), 500); })), btn("▶ Siguiente destino", run(() => { go("map"); const n = nextPlanet(); n && setTimeout(() => MAP.select(n), 600); }))),
+      sec("Planetas y sus misiones (toca una misión para jugarla)"),
+      h("div", { class: "admin-plist" }, ORDER.map((pid, i) => h("div", { class: "admin-prow" },
+        h("button", { class: "admin-p", onclick: run(() => go("planet", { id: pid })) }, planetEl(pid, 40), h("span", null, `${i + 1}. ${P[pid].name}`)),
+        h("div", { class: "m-row", style: { justifyContent: "flex-start", gap: "6px" } },
+          MISSIONS[pid].map(m => h("button", { class: "admin-m" + (flag(m.flag) ? " done" : ""), title: m.t, onclick: run(() => { go("planet", { id: pid }); setTimeout(() => openMission({ ...m, req: null }), 500); }) }, m.ic, " ", m.t)),
+          btn("🚀 Saltar", run(() => { SFX.jump(); hyperspace(() => go("planet", { id: pid })); })))))),
+    ];
+    else if (adminTab === "cartas") pane = [
+      sec("Secciones"),
+      row(btn("✉️ Archivo de cartas", run(() => go("letters"))), btn("⭐ Recuerdos", run(() => go("memories"))), btn("◈ Secretos", run(() => go("secrets"))), btn("🖼️ Galería de las 57 ilustraciones", () => { adminTab = "galeria"; draw(); })),
+      sec(`Las ${LETTERS.length} cartas (toca para leer)`),
+      h("div", { class: "admin-letters" }, ORDER.map(pid => h("div", null, h("b", null, `${ORDER.indexOf(pid) + 1}. ${P[pid].name}`),
+        h("div", { style: { display: "grid", gap: "4px" } }, lettersOf(pid).map(l => h("button", { class: "admin-lrow", onclick: run(() => openLetter(l.id, lettersOf(pid), true)) }, h("span", { class: "n" }, l.n), h("span", null, l.title), h("small", null, kindOf(l).name))))))),
+    ];
+    else if (adminTab === "galeria") pane = [
+      row(btn("← Volver a cartas", () => { adminTab = "cartas"; draw(); })),
+      h("div", { class: "admin-gallery" }, LETTERS.map(l => h("button", { onclick: run(() => openLetter(l.id, null, true)), html: SC.html(l.n) + `<small>${l.n}. ${SC.cap(l.n)}</small>` }))),
+    ];
+    else if (adminTab === "droide") pane = [
+      h("div", { class: "dr-head" }, h("div", { class: "dr-ava" }, droidFull(84, d)), h("div", { class: "dr-stats" }, h("b", null, droidName()), h("span", null, `Amistad nv. ${dLevel(d)} · ✦ ${d.cred} chispas · ${d.owned.length} accesorios · Orbi ${d.fragments.length}/${DATA2.frags.length}`))),
+      sec("Abrir el hangar"),
+      row(btn("💬 Hablar", run(() => openDroid("hablar"))), btn("🔧 Cuidar", run(() => openDroid("cuidar"))), btn("🛍️ Tienda", run(() => openDroid("tienda"))), btn("🎮 Juegos", run(() => openDroid("juegos")))),
+      sec("Cambiar de droide"),
+      row(...DATA.droids.map(x => btn((S.profile && S.profile.droid) === x.id ? "✓ " + x.label : x.label, () => { S.profile = { ...(S.profile || {}), droid: x.id }; emit(); placeDroid(); ok("Droide: " + x.label); }))),
+      sec("Trucos"),
+      row(btn("✦ +50 chispas", () => { dset({ cred: dget().cred + 50 }); ok("+50 chispas"); }), btn("🤖 Amistad al máximo", () => { dset({ xp: 200 }); ok("Amistad nivel 10"); }), btn("🔋 Energía, limpieza y reparación al 100%", () => { dset({ energy: 100, clean: 100, repair: 100 }); ok("Droide a tope"); }), btn("🪫 Droide cansado (ver estado triste)", () => { dset({ energy: 20, clean: 25, repair: 30 }); ok("Droide cansado"); })),
+      row(btn("🎁 Todos los accesorios", () => { dset({ owned: DATA2.acc.map(a => a.id) }); ok("Todos los accesorios", "Ya puedes ponérselos en la tienda."); }), btn("🧹 Quitar accesorios", () => { dset({ equipped: {} }); placeDroid(); ok("Accesorios quitados"); }), btn("🔵 Hacer aparecer a Orbi", () => { dset({ sphereOn: null }); ok("Orbi aparecerá en el próximo planeta"); }), btn("📜 Todos los mensajes de Orbi", () => { dset({ fragments: DATA2.frags.map((_, i) => i) }); ok("15 fragmentos de Orbi"); }), btn("📡 Holonoticia de nuevo", () => { dset({ pilotOn: null }); ok("El Capitán Rumbo tiene noticia nueva"); })),
+      sec("Personajes"),
+      h("div", { style: { display: "grid", gap: "8px" } }, Object.keys(DATA2.npcs).map(k => npcCard(k))),
+    ];
+    else if (adminTab === "progreso") {
+      const ach = achievements(), claimable = ach.filter(a => a.state === "reclamar").length;
+      pane = [
+        h("p", { class: "muted", style: { margin: 0, fontSize: "13px" } }, `Este dispositivo: ${visitedCount()}/12 planetas · ${ORDER.flatMap(p => MISSIONS[p]).filter(m => flag(m.flag)).length}/${ORDER.flatMap(p => MISSIONS[p]).length} misiones · ${readCount()}/${LETTERS.length} cartas leídas · ${ach.filter(a => a.state === "hecho").length}/${ach.length} logros`),
+        sec("Ver el juego como Arián"),
+        row(btn(S.settings.devOpenAll ? "🔓 Todo abierto (tocar para ver como Arián)" : "🔒 Viendo como Arián (tocar para abrirlo todo)", () => { S.settings = { ...S.settings, devOpenAll: !S.settings.devOpenAll }; emit(); ok(S.settings.devOpenAll ? "Todo abierto" : "Ahora ves solo lo que Arián tendría desbloqueado"); }, "btn btn--sm btn--primary")),
+        sec("Completar"),
+        row(btn("🪐 Visitar los 12 planetas", () => { for (const p of ORDER) S.visited = { ...S.visited, [p]: true }; emit(); ok("12 planetas visitados"); }),
+          btn("✓ Completar todas las misiones", () => { for (const p of ORDER) { S.visited = { ...S.visited, [p]: true }; for (const m of MISSIONS[p]) { S.flags = { ...S.flags, [m.flag]: true }; payFlag(m.flag); } } emit(); ok("Todas las misiones completadas"); }),
+          btn("✉️ Marcar 56 cartas como leídas", () => { S.readLetters = LETTERS.filter(l => l.n < 57).map(l => l.id); emit(); ok("56 cartas leídas", "Ya se puede abrir el último holocrón."); }),
+          btn(`🏅 Reclamar logros (${claimable})`, () => { for (const a of achievements()) if (a.state === "reclamar") claim(a); draw(); })),
+        sec("Reiniciar"),
+        row(btn("↺ Misiones", () => { S.flags = {}; emit(); ok("Misiones reiniciadas"); }, "btn btn--sm btn--ghost"), btn("↺ Cartas leídas", () => { S.readLetters = []; emit(); ok("Cartas sin leer"); }, "btn btn--sm btn--ghost"), btn("↺ Logros", () => { setData("missions", { claimed: [] }); ok("Logros reiniciados"); }, "btn btn--sm btn--ghost"), btn("↺ Favoritas", () => { setData("favorites", []); ok("Favoritas borradas"); }, "btn btn--sm btn--ghost")),
+        row(btn("↺ TODO el progreso de este dispositivo", () => { if (!confirm("¿Borrar el progreso de ESTE dispositivo? El de Arián no se toca.")) return; Object.assign(S, { readLetters: [], visited: {}, flags: {}, counters: {}, lastPlanet: null, data: { v3seen: true, tourDone: true } }); emit(); close(); go("map"); toast("↺", "Progreso reiniciado", "Este dispositivo empieza de cero."); }, "btn btn--sm btn--ghost")),
+      ];
+    } else {
+      const st = S.settings;
+      pane = [
+        sec("Calidad gráfica"),
+        row(...[["auto", "Automática"], ["lite", "Ligera"], ["high", "Máxima"]].map(([k, t]) => btn(((st.graphics || "auto") === k ? "✓ " : "") + t, () => { S.settings = { ...S.settings, graphics: k }; emit(); applySettings(); ok("Calidad: " + t, "Recarga la página para verlo del todo."); }))),
+        sec("Color del sable"),
+        row(...DATA.sabers.map(c => btn(((S.profile && S.profile.saber) === c.id ? "✓ " : "") + c.label, () => { S.profile = { ...(S.profile || {}), saber: c.id }; emit(); applySettings(); SFX.saber(); draw(); }))),
+        sec("Sonido y movimiento"),
+        row(btn(st.muted ? "🔇 Sonido apagado" : "🔊 Sonido encendido", () => { S.settings = { ...S.settings, muted: !st.muted }; emit(); draw(); }), btn(st.ambience ? "🎵 Ambiente encendido" : "🎵 Ambiente apagado", () => { S.settings = { ...S.settings, ambience: !st.ambience }; emit(); draw(); }), btn(st.reduceMotion ? "🐢 Animaciones reducidas" : "🐇 Animaciones completas", () => { S.settings = { ...S.settings, reduceMotion: !st.reduceMotion }; emit(); applySettings(); draw(); })),
+        sec("Nombre"),
+        h("form", { class: "gate-form", onsubmit: e => { e.preventDefault(); const v = e.target.querySelector("input").value.trim(); if (v) { S.profile = { ...(S.profile || {}), name: v }; emit(); ok("Nombre: " + v); } } }, h("input", { class: "field", value: herName(), maxlength: 24, "aria-label": "Nombre" }), h("button", { class: "btn btn--sm", type: "submit" }, "Guardar nombre")),
+        sec("Página completa"),
+        row(btn("⚙ Opciones normales", run(() => go("settings"))), btn("💾 Descargar copia de seguridad", run(() => { go("settings"); setTimeout(() => [...document.querySelectorAll(".btn")].find(b => b.textContent === "Descargar copia")?.click(), 400); })), btn("🔄 Recargar la página", () => location.reload())),
+        sec("Salir"),
+        btn("Salir del modo administrador", () => { close(); setAdmin(false); toast("⚙", "Modo administrador desactivado", "La galaxia vuelve a funcionar como para Arián."); }, "btn"),
+      ];
+    }
+    body.replaceChildren(tabs, ...pane.flat());
+  }
+  draw();
 }
 function whatsNewForce() { setData("v3seen", false); const keep = S.readLetters; if (!keep.length) S.readLetters = ["c01"]; whatsNew(() => { S.readLetters = keep; }); }

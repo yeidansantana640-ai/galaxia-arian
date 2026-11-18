@@ -772,3 +772,18 @@ html[data-wipe=clock]::view-transition-new(root){animation:wipe-clock .7s linear
 .ptitle span{display:inline-block;animation:letter .8s var(--ease) both}
 .noanim .ptitle span{animation:none}
 @media (min-width:700px){.phead--art{margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);padding-left:max(16px,calc(50vw - 320px));padding-right:max(16px,calc(50vw - 320px));min-height:280px}.phead--art .ptop{left:max(16px,calc(50vw - 320px));right:max(16px,calc(50vw - 320px))}}
+.admin-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;position:sticky;top:-18px;z-index:2;background:linear-gradient(180deg,#0b1024 80%,transparent);padding-top:4px}
+.admin-tabs button{flex:none;min-height:40px;padding:0 12px;border-radius:12px;border:1px solid var(--hair2);background:rgba(255,255,255,.05);color:var(--ink2);font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap}
+.admin-tabs button[aria-pressed=true]{background:rgba(255,90,106,.16);border-color:#ff5a6a;color:#ffd0d6}
+.admin-plist{display:grid;gap:10px}
+.admin-prow{display:grid;gap:6px;padding:8px;border-radius:14px;border:1px solid var(--hair);background:rgba(255,255,255,.02)}
+.admin-prow .admin-p{justify-self:start}
+.admin-m{min-height:36px;padding:0 10px;border-radius:10px;border:1px solid var(--hair2);background:rgba(255,255,255,.05);color:var(--ink);font-size:12.5px;cursor:pointer}
+.admin-m.done{border-color:rgba(141,255,196,.5);color:var(--ok)}
+.admin-lrow{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:8px;min-height:40px;padding:4px 10px;border-radius:10px;border:1px solid var(--hair);background:rgba(255,255,255,.03);color:var(--ink);text-align:left;cursor:pointer;font-size:13.5px}
+.admin-lrow .n{font:700 12px var(--f-display);color:var(--gold)}
+.admin-lrow small{color:var(--ink3);font-size:11px}
+.admin-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.admin-gallery button{padding:0;border:1px solid var(--hair2);border-radius:12px;overflow:hidden;background:#000;cursor:pointer;color:var(--ink);text-align:left}
+.admin-gallery .scn{display:block;width:100%;height:auto}
+.admin-gallery small{display:block;padding:4px 6px;font-size:10.5px;color:var(--ink2)}
