@@ -606,3 +606,35 @@ textarea.field{min-height:110px;resize:vertical}
 .scn .sand{animation:dash 1s linear infinite}
 .scn .saberl{animation:sbl 2.2s ease-in-out infinite}
 @keyframes sbl{50%{opacity:.75}}
+/* droid shop */
+.shop{display:grid;gap:12px}
+.shop-stage{position:relative;height:210px;border-radius:20px;overflow:hidden;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 85%,hsl(var(--accent-h) 90% 60% / .35),transparent 55%),radial-gradient(ellipse at 50% 0%,rgba(255,255,255,.12),transparent 60%),linear-gradient(180deg,#0b1030,#05071a);border:1px solid hsl(var(--accent-h) 100% 70% / .35)}
+.shop-beam{position:absolute;left:50%;top:-10%;width:180px;height:120%;transform:translateX(-50%);background:linear-gradient(180deg,rgba(255,255,255,.18),transparent 75%);clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);pointer-events:none}
+.shop-ring{position:absolute;left:50%;bottom:16px;width:190px;height:44px;transform:translateX(-50%);border-radius:50%;border:2px solid hsl(var(--accent-h) 100% 70% / .7);box-shadow:0 0 24px var(--accent-glow),inset 0 0 18px var(--accent-glow);animation:ringpulse 2.6s ease-in-out infinite}
+@keyframes ringpulse{50%{box-shadow:0 0 40px var(--accent-glow),inset 0 0 28px var(--accent-glow)}}
+.shop-pedestal{position:absolute;left:50%;bottom:6px;width:150px;height:30px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse,rgba(255,255,255,.25),rgba(120,150,220,.1) 60%,transparent 70%)}
+.shop-droid{position:relative;z-index:2;margin-bottom:24px;animation:showcase 3.4s ease-in-out infinite}
+.shop-droid svg{overflow:visible;filter:drop-shadow(0 10px 18px rgba(0,0,0,.6))}
+@keyframes showcase{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-8px) rotate(2deg)}}
+.shop-try{position:absolute;left:10px;top:10px;z-index:3;border:1px solid;background:rgba(5,7,20,.7)}
+.shop-bal{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:16px;background:linear-gradient(90deg,rgba(255,217,138,.14),transparent);border:1px solid rgba(255,217,138,.35)}
+.shop-bal b{font:700 22px var(--f-display);color:var(--gold)}
+.shop-bal>span:nth-child(3){color:var(--ink2);font-size:13px}
+.shop-coin{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#fff3c8,#e9a83c);color:#5a3a00;font-weight:700;box-shadow:0 0 14px rgba(255,200,100,.6);animation:coinspin 3s ease-in-out infinite}
+@keyframes coinspin{50%{transform:rotateY(180deg)}}
+.shop-npc{display:flex;gap:10px;align-items:flex-start}
+.shop-npc .bubble{flex:1;margin:0;font-size:13.5px}
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.shop-card{position:relative;display:grid;justify-items:center;gap:4px;padding:22px 6px 10px;border-radius:16px;border:1px solid var(--hair2);background:linear-gradient(180deg,color-mix(in srgb,var(--rc) 12%,transparent),rgba(255,255,255,.03));color:var(--ink);cursor:pointer;text-align:center;transition:transform .15s,border-color .2s,box-shadow .2s}
+.shop-card:active{transform:scale(.96)}
+.shop-card[aria-pressed=true]{border-color:var(--rc);box-shadow:0 0 0 1px var(--rc),0 0 22px color-mix(in srgb,var(--rc) 45%,transparent)}
+.shop-card[data-locked]{opacity:.55}
+.shop-card b{font-size:12.5px;line-height:1.2}
+.shop-card small{font-size:11.5px;color:var(--ink2)}
+.sc-rar{position:absolute;top:6px;left:6px;font:700 8.5px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--rc)}
+.sc-prev{height:66px;display:grid;place-items:center}
+.sc-prev svg{overflow:visible}
+.shop-detail{padding:14px;display:grid;gap:8px;position:sticky;bottom:-18px;z-index:3}
+.coin-fly{position:fixed;z-index:200;pointer-events:none;color:var(--gold);font-size:18px;font-weight:700;text-shadow:0 0 10px rgba(255,200,100,.9)}
+.lite .shop-droid,.lite .shop-coin{animation:none}
+.droid-fab[data-news]::after{content:"!";position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:var(--gold);color:#1c1200;font:700 13px/20px var(--f-body);text-align:center;box-shadow:0 0 12px rgba(255,200,100,.8);animation:breathe 1.6s ease-in-out infinite}

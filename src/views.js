@@ -26,6 +26,7 @@ function updateBadges() {
   const b = tabbar.querySelector('[data-id=letters] .badge'); b.textContent = unread; b.style.display = unread ? "" : "none";
   const c = claimable(), b2 = tabbar.querySelector('[data-id=secrets] .badge'); b2.textContent = c; b2.style.display = c ? "" : "none";
   if (droidFab && droidFab._eq !== JSON.stringify(dget().equipped) + (S.profile && S.profile.droid)) placeDroid();
+  if (droidFab) { const dd = dget(), t = today(); droidFab.toggleAttribute("data-news", !dd.careDays.includes(t) || dd.pilotOn !== t); }
 }
 function buildTabbar() {
   tabbar = h("nav", { class: "tabbar", "aria-label": "Secciones" }, TABS.map(([id, label, ic]) => h("button", { class: "tab", "data-id": id, onclick: () => { SFX.tap(); go(id); } }, icon(ic), label, id === "letters" || id === "secrets" ? h("span", { class: "badge" }) : null)));
