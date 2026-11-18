@@ -905,3 +905,26 @@ html[data-wipe=clock]::view-transition-new(root){animation:wipe-clock .7s linear
 .porg-stage.locked svg{filter:brightness(0) opacity(.4)}
 .pd{cursor:pointer;color:inherit;font:inherit}
 .pd:active{transform:scale(.95)}
+/* inhabitants */
+.fauna{position:absolute;z-index:7;border:0;padding:0;background:none;cursor:pointer;transform:translateX(-50%);filter:drop-shadow(0 4px 6px rgba(0,0,0,.55))}
+.fauna svg{overflow:visible;display:block}
+.fauna--walk{animation:fwalk 18s ease-in-out infinite alternate}
+.fauna--walk.fly{animation:ffly 14s ease-in-out infinite alternate}
+@keyframes fwalk{0%{translate:-40px 0}100%{translate:40px 0}}
+@keyframes ffly{0%{translate:-50px 6px}50%{translate:0 -8px}100%{translate:50px 6px}}
+.fauna .f-bob{animation:fbob 1.2s ease-in-out infinite;transform-origin:30px 56px}
+@keyframes fbob{50%{transform:translateY(-1.5px) rotate(1.5deg)}}
+.fauna .f-float{animation:pfloat 3s ease-in-out infinite}
+.fauna .f-eyes{transform-origin:30px 25px;animation:blink 4.6s infinite}
+.fauna .f-led{animation:twk 1.4s ease-in-out infinite}
+.fauna.hi svg{animation:hop .6s ease-out}
+.fauna-say{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);width:max-content;max-width:210px;padding:8px 10px;border-radius:12px;font-size:12.5px;line-height:1.35;text-align:left;color:var(--ink);pointer-events:none;animation:pop .25s var(--ease);margin-bottom:6px;z-index:9}
+.fauna-say b{display:block;font-size:11px;color:var(--gold)}
+.fauna--show{position:relative;transform:none;left:auto;bottom:auto}
+.fauna-dex small{font-size:10.5px;line-height:1.2;text-align:center}
+.porg-stage.locked .fa-svg{filter:brightness(0) opacity(.4)}
+.pd .fa-svg{filter:brightness(0) opacity(.35)}
+.pd.f .fa-svg{filter:none}
+.lite .fauna--walk{animation:none}
+.droid-pick{grid-template-columns:repeat(4,1fr)}
+@media (max-width:420px){.droid-pick{grid-template-columns:repeat(2,1fr)}}

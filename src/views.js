@@ -175,6 +175,7 @@ function cineHero(id) {
     h("div", { class: "cine-ship", html: `<svg viewBox="-30 -18 60 36" width="54" height="32"><path d="M-22 0 L18 -2 L24 0 L18 2Z" fill="#dfe6ef"/><path d="M-6 -2 L-16 -14 L-12 -14 L2 -2Z M-6 2 L-16 14 L-12 14 L2 2Z" fill="#c8d0dc"/><circle cx="-24" cy="0" r="3" fill="#ff8a5c"/><circle cx="-24" cy="0" r="7" fill="#ff8a5c" opacity=".35"/></svg>` }),
     pw,
     h("div", { class: "cine-text" }, h("div", { class: "eyebrow" }, `${ORDER.indexOf(id) + 1} de 12 · ${LAYOUT[id].sector}`), title, h("div", { class: "tag" }, p.tagline)));
+  faunaLayer(id, sec);
   // porgs: a flock lives on Ahch-To, and one is hiding on every planet
   if (id === "ahch-to") [[14, 16, 54, 0], [30, 10, 44, 1], [68, 13, 50, 2], [84, 18, 40, 0]].forEach(([x, b, sz, look], i) => {
     const pg = h("button", { class: "porg porg--flock", "aria-label": "Un porg", style: { left: x + "%", bottom: b + "%", animationDelay: (-i * 1.3) + "s" } }, porgEl(sz, look));
@@ -314,6 +315,9 @@ function viewSecrets() {
     h("div", { class: "section-t" }, `Guía de porgs · ${porgsFound().length} de 12 razas`),
     h("p", { class: "muted", style: { margin: 0, fontSize: "13.5px" } }, "Cada planeta tiene su propia raza de porg, escondida en su portada. Búscalos y tócalos para añadirlos a la guía."),
     h("div", { class: "porg-dex" }, ORDER.map(pid => { const f = porgsFound().includes(pid); return h("button", { class: "pd" + (f ? " f" : ""), onclick: () => porgCard(pid) }, porgEl(46, pid), h("small", null, f ? PORG[pid].n.replace("Porg ", "") : P[pid].name)); })),
+    h("div", { class: "section-t" }, `Habitantes de la galaxia · ${faunaFound().length} de ${FA.ALL.length}`),
+    h("p", { class: "muted", style: { margin: 0, fontSize: "13.5px" } }, "Cada región tiene sus especies y sus droides. Pasean por la portada de cada planeta: tócalos para conocerlos."),
+    h("div", { class: "porg-dex fauna-dex" }, FA.ALL.map(x => { const f = faunaFound().includes(x.id); return h("button", { class: "pd" + (f ? " f" : ""), onclick: () => faunaCard(x) }, FA.svg(x, 46), h("small", null, f ? x.n : P[x.pid].name)); })),
     h("div", { class: "section-t" }, "Logros"),
     h("p", { class: "muted", style: { margin: 0, fontSize: "13.5px" } }, `Cada logro reclamado da chispas para los accesorios de ${droidName()}.`),
     achievementsView(),
