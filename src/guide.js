@@ -46,7 +46,7 @@ async function gate(done) {
       inp.select();
     }
   } }, inp, h("button", { class: "btn btn--gold", type: "submit" }, "Desbloquear"));
-  const el = h("div", { class: "gate", role: "dialog", "aria-label": "Acceso protegido" }, cv,
+  const el = h("div", { class: "gate", role: "dialog", "aria-label": "Acceso protegido" }, cv, langToggle("langsw--gate"),
     h("div", { class: "gate-card" }, lock,
       h("div", { class: "eyebrow", style: { color: "var(--gold)" } }, "Archivo Jedi · acceso restringido"),
       h("h1", null, "Holocrón sellado"),

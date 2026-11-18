@@ -965,3 +965,13 @@ html[data-wipe=clock]::view-transition-new(root){animation:wipe-clock .7s linear
 .fauna-say{position:fixed;z-index:80;bottom:auto;transform:none;margin:0}
 .lite .orb{animation:none}
 @media (min-width:1024px){.cine-text{top:12%}}
+/* ===== idioma ===== */
+.langsw{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:999px;background:rgba(10,16,34,.72);border:1px solid rgba(127,227,255,.28);box-shadow:0 0 18px rgba(127,227,255,.08) inset;flex:none}
+.langsw button{all:unset;cursor:pointer;font:700 11px/1 Orbitron,sans-serif;letter-spacing:.08em;color:rgba(220,235,255,.62);padding:8px 10px;border-radius:999px;transition:background .25s,color .25s,box-shadow .25s}
+.langsw button[data-on]{background:linear-gradient(180deg,rgba(127,227,255,.32),rgba(127,227,255,.14));color:#fff;box-shadow:0 0 12px rgba(127,227,255,.35)}
+.langsw button:focus-visible{outline:2px solid var(--acc,#7fe3ff);outline-offset:1px}
+.langsw--set{justify-self:start}
+.langsw--set button{font-size:12.5px;padding:10px 16px}
+html.lang-out body{transition:opacity .25s,filter .25s;opacity:0;filter:blur(6px)}
+@media (max-width:420px){.langsw--map button{padding:7px 7px;font-size:10px}}
+.langsw--gate{position:absolute;top:calc(env(safe-area-inset-top,0px) + 16px);right:16px;z-index:5}
