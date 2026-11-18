@@ -1,15 +1,39 @@
 /* ================= GATE, HELP, TOUR, MEMORY ================= */
-const GATE_KEY = "galaxia-arian:gate", GATE_H = 840749505;
+const GATE_KEY = "galaxia-arian:gate", GATE_H = 840749505, KKEY = "galaxia-arian:k";
+/* letters are encrypted (AES-GCM); the data key is wrapped with the password and with the admin code */
+const ub64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0)), b64u = u => btoa(String.fromCharCode(...u));
+async function unwrapKey(pass) {
+  const C = crypto.subtle, enc = new TextEncoder();
+  for (const w of ENC.wraps) try {
+    const base = await C.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);
+    const wk = await C.deriveKey({ name: "PBKDF2", salt: ub64(w.salt), iterations: ENC.iter, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+    return new Uint8Array(await C.decrypt({ name: "AES-GCM", iv: ub64(w.iv) }, wk, ub64(w.w)));
+  } catch (e) { }
+  return null;
+}
+async function openLetters(K) {
+  try {
+    const k = await crypto.subtle.importKey("raw", K, "AES-GCM", false, ["decrypt"]);
+    const bodies = JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: ub64(ENC.iv) }, k, ub64(ENC.ct))));
+    for (const l of LETTERS) if (bodies[l.id]) { l.title = bodies[l.id].t; l.body = bodies[l.id].b; }
+    try { localStorage.setItem(KKEY, b64u(K)); } catch (e) { openLetters.mem = K; }
+    return true;
+  } catch (e) { return false; }
+}
+async function storedKeyOk() { try { const k = localStorage.getItem(KKEY) || (openLetters.mem && b64u(openLetters.mem)); return k ? await openLetters(ub64(k)) : false; } catch (e) { return false; } }
 function gateOk() { try { return localStorage.getItem(GATE_KEY) === String(GATE_H); } catch (e) { return !!gateOk.mem; } }
-function gate(done) {
-  if (gateOk()) return done();
+async function gate(done) {
+  if (gateOk() && await storedKeyOk()) return done();
+  const again = gateOk();
   const cv = h("canvas");
   const inp = h("input", { class: "gate-in", type: "password", autocomplete: "off", autocapitalize: "off", spellcheck: "false", "aria-label": "Contraseña", placeholder: "Código de acceso" });
   const msg = h("p", { class: "gate-msg", role: "status" });
   const lock = h("div", { class: "gate-lock" }, h("div", { class: "cube" }, h("div", { class: "cube-in" }, [1, 2, 3, 4, 5, 6].map(() => h("i")))));
   const saber = h("div", { class: "saber gate-saber" });
-  const form = h("form", { class: "gate-form", onsubmit: e => {
+  const form = h("form", { class: "gate-form", onsubmit: async e => {
     e.preventDefault();
+    const okCode = adminCode(inp.value) || hash("galaxia|" + inp.value) === GATE_H;
+    if (okCode) { msg.textContent = "Abriendo el holocrón…"; msg.className = "gate-msg ok"; const K = await unwrapKey(inp.value); if (!K || !(await openLetters(K))) { msg.textContent = "No se pudieron abrir las cartas. Inténtalo otra vez."; msg.className = "gate-msg"; return; } }
     if (adminCode(inp.value)) { try { localStorage.setItem(GATE_KEY, String(GATE_H)); } catch (er) { gateOk.mem = true; } el.remove(); setAdmin(true); toast("⚙", "Modo administrador activado", "Todo está desbloqueado en este dispositivo."); return done(); }
     if (hash("galaxia|" + inp.value) === GATE_H) {
       try { localStorage.setItem(GATE_KEY, String(GATE_H)); } catch (er) { gateOk.mem = true; }
@@ -26,7 +50,7 @@ function gate(done) {
     h("div", { class: "gate-card" }, lock,
       h("div", { class: "eyebrow", style: { color: "var(--gold)" } }, "Archivo Jedi · acceso restringido"),
       h("h1", null, "Holocrón sellado"),
-      h("p", { class: "muted", style: { margin: 0 } }, "Esta galaxia guarda transmisiones privadas. Introduce el código para abrirla."),
+      h("p", { class: "muted", style: { margin: 0 } }, again ? "Las cartas ahora viajan cifradas. Introduce el código una vez más para abrirlas en este dispositivo." : "Esta galaxia guarda transmisiones privadas. Introduce el código para abrirla."),
       form, msg, saber,
       h("p", { class: "gate-foot" }, "Solo hace falta una vez en cada dispositivo.")));
   document.body.append(el); starfield(cv); setTimeout(() => inp.focus(), 300);
@@ -173,7 +197,7 @@ function adminPanel() {
     h("p", { class: "muted", style: { margin: 0, fontSize: "13.5px" } }, "Con el modo administrador todo está abierto en este dispositivo y leer cartas no cuenta como leídas. No afecta al móvil de Arián: cada dispositivo guarda su propio progreso."),
     h("div", { class: "section-t" }, "Ver escenas"),
     h("div", { class: "m-row", style: { justifyContent: "flex-start" } },
-      btn("▶ Contraseña de entrada", () => { close(); try { localStorage.removeItem(GATE_KEY); } catch (e) { } gate(() => { }); }),
+      btn("▶ Contraseña de entrada", () => { close(); try { localStorage.removeItem(GATE_KEY); localStorage.removeItem(KKEY); } catch (e) { } gate(() => { }); }),
       btn("▶ Introducción", () => { close(); playIntro(() => { }); }),
       btn("▶ Visita guiada", () => { close(); go("map"); setTimeout(startTour, 700); }),
       btn("▶ Mensaje de novedades", () => { close(); setData("v3seen", false); const r = S.readLetters; whatsNewForce(); }),

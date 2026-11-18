@@ -5,7 +5,7 @@ const MAP = (() => {
   let W = 0, H = 0, dpr = 1;
   const cam = { x: WORLD.w / 2, y: WORLD.h / 2, s: .3 };
   let target = null, minS = .2, maxS = 2.4, sel = null, dirty = true, running = false, built = false, visible = false;
-  let neb, starL = [], galaxies = [], dust = [], nextBtn = null, vigC = null, frameN = 0, miniN = 0, c0 = null, lastBg = 0, wasMoving = false, fcv, fctx, fdpr = 1;
+  let neb, starL = [], galaxies = [], dust = [], nextBtn = null, vigC = null, frameN = 0, miniN = 0, c0 = null, lastBg = 0, wasMoving = false, shoot = null, fcv, fctx, fdpr = 1;
   const nodes = {}, labels = {}, routes = [];
   const toScreen = (x, y) => [(x - cam.x) * cam.s + W / 2, (y - cam.y) * cam.s + H / 2];
   const toWorld = (x, y) => [(x - W / 2) / cam.s + cam.x, (y - H / 2) / cam.s + cam.y];
@@ -73,6 +73,14 @@ const MAP = (() => {
       g.globalAlpha = 1;
     }
     drawShips(g, time);
+    // shooting stars
+    if (!shoot && Math.random() < .004) shoot = { x: Math.random() * W, y: Math.random() * H * .5, a: .5 + Math.random() * .5, t0: time };
+    if (shoot) {
+      const k = (time - shoot.t0) / 900; if (k > 1) shoot = null; else {
+        const len = 140, x = shoot.x + Math.cos(shoot.a) * k * 360, y = shoot.y + Math.sin(shoot.a) * k * 360, gr = g.createLinearGradient(x, y, x - Math.cos(shoot.a) * len, y - Math.sin(shoot.a) * len);
+        gr.addColorStop(0, `rgba(255,255,255,${1 - k})`); gr.addColorStop(1, "rgba(255,255,255,0)"); g.strokeStyle = gr; g.lineWidth = 1.6; g.beginPath(); g.moveTo(x, y); g.lineTo(x - Math.cos(shoot.a) * len, y - Math.sin(shoot.a) * len); g.stroke();
+      }
+    }
   }
   function draw(time) {
     const g = ctx; g.setTransform(dpr, 0, 0, dpr, 0, 0);

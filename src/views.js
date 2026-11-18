@@ -4,7 +4,11 @@ const TABS = [["map", "Mapa", "map"], ["letters", "Cartas", "cards"], ["planets"
 function go(name, params = {}, push = true) {
   closeModals(); droidBubble && droidBubble.remove();
   if (push) try { history.pushState({ name, params }, ""); } catch (e) { }
-  route = { name, params }; render(); window.scrollTo(0, 0); rememberRoute();
+  const doIt = () => { route = { name, params }; render(); window.scrollTo(0, 0); rememberRoute(); };
+  if (document.startViewTransition && !reduced() && route.name !== name && !$(".hyper[data-on]") && !go.noWipe) {
+    document.documentElement.dataset.wipe = ["line", "iris", "line", "clock"][go.n = ((go.n || 0) + 1) % 4];
+    try { document.startViewTransition(doIt); } catch (e) { doIt(); }
+  } else doIt();
 }
 window.addEventListener("popstate", e => { const st = e.state || { name: "map", params: {} }; route = st; closeModals(); closeReader(); render(); });
 function render() {
@@ -32,8 +36,17 @@ function buildTabbar() {
   tabbar = h("nav", { class: "tabbar", "aria-label": "Secciones" }, TABS.map(([id, label, ic]) => h("button", { class: "tab", "data-id": id, onclick: () => { SFX.tap(); go(id); } }, icon(ic), label, id === "letters" || id === "secrets" ? h("span", { class: "badge" }) : null)));
   document.body.append(tabbar);
 }
+const PAGE_ART = { letters: [52, "#7fe3ff"], planets: [55, "#ffd98a"], memories: [54, "#ffb38a"], secrets: [57, "#ffd98a"], settings: [21, "#9fb4ff"] };
 function page(title, lead, ...kids) {
-  return h("div", { class: "view" }, h("div", { class: "view-bg" }), h("div", { class: "page" }, h("header", null, h("div", { class: "ptop" }, h("div", { class: "grow" }, h("div", { class: "eyebrow" }, lead[0]), h("h1", { class: "ptitle" }, title)), h("button", { class: "mtool", "aria-label": "Opciones", onclick: () => go("settings") }, icon("gear"))), lead[1] ? h("p", { class: "plead" }, lead[1]) : null), ...kids));
+  const art = PAGE_ART[route.name];
+  const t = h("h1", { class: "ptitle", "aria-label": title }, [...title].map((c, i) => h("span", { style: { animationDelay: (.15 + i * .035) + "s" } }, c === " " ? "\u00a0" : c)));
+  const head = h("header", { class: "phead" + (art ? " phead--art" : ""), style: art ? { "--pa": art[1] } : null },
+    art ? h("div", { class: "phead-art", "aria-hidden": "true", html: SC.html(art[0]) }) : null,
+    art ? h("div", { class: "ptop" }, route.name === "settings" ? null : h("div", { style: { flex: 1 } }), route.name === "settings" ? null : h("button", { class: "mtool", "aria-label": "Opciones", onclick: () => go("settings") }, icon("gear"))) : null,
+    art ? h("div", { class: "eyebrow" }, lead[0]) : null, art ? t : null,
+    art ? null : h("div", { class: "ptop" }, h("div", { class: "grow" }, h("div", { class: "eyebrow" }, lead[0]), t), h("button", { class: "mtool", "aria-label": "Opciones", onclick: () => go("settings") }, icon("gear"))),
+    lead[1] ? h("p", { class: "plead" }, lead[1]) : null);
+  return h("div", { class: "view" }, h("div", { class: "view-bg" }), h("div", { class: "page" }, head, ...kids));
 }
 
 /* ================= modal ================= */
@@ -268,7 +281,7 @@ function viewSecrets() {
   const un = unlockedSet(), secrets = LETTERS.filter(l => l.category === "secreta"), sGot = secrets.filter(l => un.has(l.id)).length;
   const locked = LETTERS.filter(l => !un.has(l.id) && l.category !== "secreta");
   const pending = ORDER.filter(planetUnlocked).flatMap(pid => MISSIONS[pid].filter(m => !flag(m.flag)));
-  return page("Secretos por descubrir", ["Templos Jedi", "Holocrones escondidos, señales cifradas y un sistema que no aparece en ningún mapa."],
+  return page("Secretos por descubrir", ["Templos Jedi", "Holocrones escondidos, logros con premio y el último holocrón del viaje."],
     h("div", { class: "summary holo" }, h("div", { class: "kind-ic", style: { width: "56px", flex: "none" } }, kindIcon(LBYID["c57"], false)),
       h("div", { class: "grow" }, h("b", null, `${sGot} de ${secrets.length} holocrones abiertos`), h("span", null, `${locked.length} cartas cifradas · ${pending.length} misiones pendientes`))),
     h("div", { class: "section-t" }, "Logros"),

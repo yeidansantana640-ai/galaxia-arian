@@ -1,0 +1,5 @@
+# texto de las cartas sin cifrar (se genera con: node src/cartas/descifrar.mjs AyY)
+src/data.js
+src/cartas/cartas-57.txt
+backup/cartas-anteriores-60.json
+backup/data-anterior.js

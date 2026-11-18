@@ -748,3 +748,27 @@ textarea.field{min-height:110px;resize:vertical}
 .admin-l:active,.admin-p:active{transform:scale(.95)}
 .map-title{cursor:default;-webkit-user-select:none;user-select:none}
 .gate-in::placeholder{letter-spacing:.06em;font-size:15px}
+/* ===== Star Wars style screen wipes ===== */
+@property --wa{syntax:'<angle>';inherits:false;initial-value:0deg}
+::view-transition-old(root){animation:none}
+::view-transition-new(root){animation:wipe-line .6s cubic-bezier(.7,0,.25,1) both}
+html[data-wipe=iris]::view-transition-new(root){animation:wipe-iris .65s cubic-bezier(.6,0,.3,1) both}
+html[data-wipe=clock]::view-transition-new(root){animation:wipe-clock .7s linear both;-webkit-mask:conic-gradient(from 0deg,#000 var(--wa),transparent 0);mask:conic-gradient(from 0deg,#000 var(--wa),transparent 0)}
+@keyframes wipe-line{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes wipe-iris{from{clip-path:circle(0% at 50% 50%)}to{clip-path:circle(75% at 50% 50%)}}
+@keyframes wipe-clock{from{--wa:0deg}to{--wa:360deg}}
+/* ===== illustrated page headers ===== */
+.phead{position:relative;display:grid;gap:6px}
+.phead--art{margin:calc(-16px - var(--st)) -16px 4px;padding:calc(16px + var(--st)) 16px 22px;min-height:230px;align-content:end;overflow:hidden;isolation:isolate}
+.phead-art{position:absolute;inset:0;z-index:-1}
+.phead-art .scn{width:100%;height:100%;display:block}
+.phead--art::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(3,4,10,.1),rgba(3,4,10,.55) 50%,#03040a 96%)}
+.phead-art{opacity:.85}
+.phead--art .ptop{position:absolute;left:16px;right:16px;top:calc(12px + var(--st));align-items:flex-start}
+.phead--art .ptop .grow{display:none}
+.phead--art::before{content:"";position:absolute;inset:0;z-index:-1;background:repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0 1px,transparent 1px 3px);pointer-events:none}
+.phead--art{--ttl:1}
+.phead--art .phead-title{display:block}
+.ptitle span{display:inline-block;animation:letter .8s var(--ease) both}
+.noanim .ptitle span{animation:none}
+@media (min-width:700px){.phead--art{margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);padding-left:max(16px,calc(50vw - 320px));padding-right:max(16px,calc(50vw - 320px));min-height:280px}.phead--art .ptop{left:max(16px,calc(50vw - 320px));right:max(16px,calc(50vw - 320px))}}
