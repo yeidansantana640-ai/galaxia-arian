@@ -863,3 +863,30 @@ html[data-wipe=clock]::view-transition-new(root){animation:wipe-clock .7s linear
   .pv-cine{height:min(72vh,700px)}
 }
 @media (min-width:1500px){.view .lcards{grid-template-columns:repeat(4,1fr)}}
+/* porgs */
+.porg{position:absolute;z-index:7;border:0;padding:0;background:none;cursor:pointer;transform:translateX(-50%);filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.porg svg{overflow:visible;display:block}
+.porg .porg-body{transform-origin:30px 54px;animation:waddle 1.6s ease-in-out infinite}
+.porg .porg-eyes{transform-origin:30px 25px;animation:blink 5s infinite}
+.porg .flip{transform-box:fill-box;transform-origin:50% 10%}
+@keyframes waddle{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg) translateY(-1.5px)}}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+.porg--flock{animation:porgwalk 14s ease-in-out infinite alternate}
+@keyframes porgwalk{0%{translate:-14px 0}100%{translate:14px 0}}
+.porg.flap .porg-body{animation:hop .7s ease-out}
+.porg.flap .flip.l{animation:flapl .12s 5 alternate}.porg.flap .flip.r{animation:flapr .12s 5 alternate}
+@keyframes hop{0%,100%{transform:none}40%{transform:translateY(-16px) rotate(-6deg)}}
+@keyframes flapl{to{transform:rotate(-40deg)}}@keyframes flapr{to{transform:rotate(40deg)}}
+.porg--hide{animation:peek 6s ease-in-out infinite}
+@keyframes peek{0%,55%,100%{translate:0 70%;opacity:.95}62%,90%{translate:0 0;opacity:1}}
+.porg--hide.caught{animation:none;transition:transform 1.1s cubic-bezier(.3,0,.2,1),opacity 1.1s;transform:translate(-50%,-260px) rotate(-20deg) scale(.6);opacity:0}
+.porg--hide.caught .flip.l{animation:flapl .1s 12 alternate}.porg--hide.caught .flip.r{animation:flapr .1s 12 alternate}
+.porg-dex{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+@media (max-width:520px){.porg-dex{grid-template-columns:repeat(4,1fr)}}
+.pd{display:grid;justify-items:center;gap:2px;padding:8px 4px;border-radius:14px;border:1px solid var(--hair);background:rgba(255,255,255,.03)}
+.pd svg{filter:brightness(0) opacity(.35)}
+.pd.f svg{filter:none}
+.pd.f{border-color:rgba(255,217,138,.4);background:rgba(255,217,138,.06)}
+.pd small{font-size:11px;color:var(--ink3)}
+.pd.f small{color:var(--gold)}
+.lite .porg--flock{animation:none}

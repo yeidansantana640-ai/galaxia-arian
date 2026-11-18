@@ -400,3 +400,19 @@ function celebrate(kind = "gold") {
     if (k < 1) requestAnimationFrame(fr); else cv.remove();
   })(t0);
 }
+
+/* ================= PORGS (original drawing) ================= */
+function porgMarkup(look = 0) {
+  const tones = [["#8b7a68", "#c8763a"], ["#7a6c5e", "#d8894a"], ["#9a8876", "#b8683a"]][look % 3];
+  return `<g class="porg-body"><ellipse cx="30" cy="54" rx="13" ry="2.4" fill="rgba(0,0,0,.3)"/>
+  <ellipse class="flip l" cx="10" cy="36" rx="5" ry="10" fill="${tones[0]}" transform="rotate(20 10 36)"/><ellipse class="flip r" cx="50" cy="36" rx="5" ry="10" fill="${tones[0]}" transform="rotate(-20 50 36)"/>
+  <ellipse cx="30" cy="34" rx="21" ry="20" fill="${tones[0]}"/><ellipse cx="30" cy="40" rx="14.5" ry="13.5" fill="#f6f1e8"/>
+  <path d="M14 26 Q30 8 46 26 Q46 36 30 36 Q14 36 14 26Z" fill="#f8f4ec"/>
+  <path d="M15 22 Q22 14 28 20 M45 22 Q38 14 32 20" stroke="${tones[1]}" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <g class="porg-eyes"><ellipse cx="22.5" cy="25" rx="5.4" ry="6.2" fill="#1a1410"/><ellipse cx="37.5" cy="25" rx="5.4" ry="6.2" fill="#1a1410"/><circle cx="24" cy="23" r="1.8" fill="#fff"/><circle cx="39" cy="23" r="1.8" fill="#fff"/></g>
+  <path d="M27.6 29.5 L32.4 29.5 L30 33Z" fill="#e8913a"/>
+  <ellipse cx="24" cy="54" rx="3.4" ry="1.6" fill="#e8913a"/><ellipse cx="36" cy="54" rx="3.4" ry="1.6" fill="#e8913a"/></g>`;
+}
+function porgEl(size = 48, look = 0, cls = "") { return svgHTML(`<svg class="porg-svg ${cls}" viewBox="0 0 60 58" width="${size}" height="${size * 58 / 60}">${porgMarkup(look)}</svg>`); }
+function porgSqueak() { const r = Math.random; tone([{ f: 1400 + r() * 300, to: 2100, d: .09, type: "triangle", g: .08 }, { f: 1900, start: .1, to: 1500, d: .12, type: "triangle", g: .07 }]); }
+const porgsFound = () => getData("porgs", []);

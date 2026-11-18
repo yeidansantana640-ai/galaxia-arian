@@ -105,6 +105,9 @@ function achievements() {
     ["droide-7", "Colección completa de Orbi", "Encuentra los quince fragmentos. Orbi aparece cuando quiere; no hay prisa.", 10, () => [d.fragments.length, 15]],
   ];
   for (const [id, title, desc, reward, prog] of D) list.push({ id, group: "Tu droide", title, desc, reward, prog });
+  const pn = () => [getData("porgs", []).length];
+  for (const [id, title, desc, reward, t] of [["porgs-1", "Primer porg", "Encuentra tu primer porg escondido.", 2, 1], ["porgs-6", "Medio nido", "Encuentra seis porgs.", 5, 6], ["porgs-12", "Amiga de los porgs", "Encuentra los 12 porgs, uno en cada planeta.", 10, 12]])
+    list.push({ id, group: "Porgs", title, desc, reward, prog: () => [pn()[0], t] });
   const claimed = new Set(getData("missions", { claimed: [] }).claimed || []);
   for (const a of list) { const [n, t] = a.prog(); a.n = Math.min(n, t); a.t = t; a.state = claimed.has(a.id) ? "hecho" : n >= t ? "reclamar" : "activo"; }
   return list;
