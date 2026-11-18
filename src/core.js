@@ -165,7 +165,7 @@ function planetUnlocked(pid) {
   return !!P[pid];
 }
 const markRead = id => {
-  if (S.readLetters.includes(id)) return;
+  if (S.readLetters.includes(id) || (typeof isAdmin === "function" && isAdmin())) return;
   const before = unlockedSet();
   S.readLetters = [...S.readLetters, id]; S.counters = { ...S.counters, "letters.read": readCount() }; emit(); announce(before);
 };

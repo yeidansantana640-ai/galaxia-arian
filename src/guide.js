@@ -10,6 +10,7 @@ function gate(done) {
   const saber = h("div", { class: "saber gate-saber" });
   const form = h("form", { class: "gate-form", onsubmit: e => {
     e.preventDefault();
+    if (adminCode(inp.value)) { try { localStorage.setItem(GATE_KEY, String(GATE_H)); } catch (er) { gateOk.mem = true; } el.remove(); setAdmin(true); toast("⚙", "Modo administrador activado", "Todo está desbloqueado en este dispositivo."); return done(); }
     if (hash("galaxia|" + inp.value) === GATE_H) {
       try { localStorage.setItem(GATE_KEY, String(GATE_H)); } catch (er) { gateOk.mem = true; }
       msg.textContent = "Acceso concedido. Bienvenida al archivo."; msg.className = "gate-msg ok";
@@ -136,3 +137,60 @@ function playFinale(done) {
   at(19200, () => { stage.querySelector(".cube") && stage.querySelector(".cube").classList.add("opening"); celebrate(); });
   at(20600, () => { const f = $(".flash") || h("div", { class: "flash" }); if (!f.isConnected) document.body.append(f); f.removeAttribute("data-on"); void f.offsetWidth; f.setAttribute("data-on", ""); end(); });
 }
+
+/* ---------- ADMIN MODE (for Yeidan: see everything without playing) ---------- */
+const ADMIN_KEY = "galaxia-arian:admin", ADMIN_H = 302948241;
+function isAdmin() { try { return localStorage.getItem(ADMIN_KEY) === String(ADMIN_H); } catch (e) { return !!isAdmin.mem; } }
+function setAdmin(on) {
+  try { on ? localStorage.setItem(ADMIN_KEY, String(ADMIN_H)) : localStorage.removeItem(ADMIN_KEY); } catch (e) { isAdmin.mem = on; }
+  S.settings = { ...S.settings, devOpenAll: !!on }; emit(); applySettings(); placeAdminBadge();
+  if (route.name === "map") MAP.refresh(); else render();
+}
+const adminCode = v => hash("admin|" + v) === ADMIN_H;
+function placeAdminBadge() {
+  $(".admin-badge") && $(".admin-badge").remove();
+  if (!isAdmin()) return;
+  document.body.append(h("button", { class: "admin-badge", onclick: () => adminPanel(), "aria-label": "Abrir panel de administrador" }, "⚙ MODO ADMIN"));
+}
+let adminTaps = [];
+function adminTap() {
+  const t = Date.now(); adminTaps = adminTaps.filter(x => t - x < 3000); adminTaps.push(t);
+  if (adminTaps.length >= 7) { adminTaps = []; isAdmin() ? adminPanel() : adminPrompt(); }
+}
+function adminPrompt() {
+  const inp = h("input", { class: "gate-in", type: "password", autocomplete: "off", placeholder: "Código de administrador", "aria-label": "Código de administrador" });
+  const msg = h("p", { class: "gate-msg" });
+  const close = modal(h("div", null, h("div", { class: "eyebrow" }, "Acceso restringido"), h("h2", null, "Modo administrador")), [
+    h("p", { class: "muted", style: { margin: 0 } }, "Introduce el código para ver toda la galaxia sin tener que jugarla."),
+    h("form", { class: "gate-form", onsubmit: e => { e.preventDefault(); if (adminCode(inp.value)) { close(); SFX.saber(); setAdmin(true); toast("⚙", "Modo administrador activado", "Todo está desbloqueado en este dispositivo."); setTimeout(adminPanel, 400); } else { SFX.bad(); msg.textContent = "Código incorrecto."; inp.select(); } } }, inp, h("button", { class: "btn btn--primary", type: "submit" }, "Entrar")), msg], null, "⚙");
+  setTimeout(() => inp.focus(), 80);
+}
+function adminPanel() {
+  if (!isAdmin()) return adminPrompt();
+  const d = dget();
+  const btn = (t, f, cls = "btn btn--sm") => h("button", { class: cls, onclick: f }, t);
+  const close = modal(h("div", null, h("div", { class: "eyebrow" }, "Solo para Yeidan"), h("h2", null, "Panel de administrador")), [
+    h("p", { class: "muted", style: { margin: 0, fontSize: "13.5px" } }, "Con el modo administrador todo está abierto en este dispositivo y leer cartas no cuenta como leídas. No afecta al móvil de Arián: cada dispositivo guarda su propio progreso."),
+    h("div", { class: "section-t" }, "Ver escenas"),
+    h("div", { class: "m-row", style: { justifyContent: "flex-start" } },
+      btn("▶ Contraseña de entrada", () => { close(); try { localStorage.removeItem(GATE_KEY); } catch (e) { } gate(() => { }); }),
+      btn("▶ Introducción", () => { close(); playIntro(() => { }); }),
+      btn("▶ Visita guiada", () => { close(); go("map"); setTimeout(startTour, 700); }),
+      btn("▶ Mensaje de novedades", () => { close(); setData("v3seen", false); const r = S.readLetters; whatsNewForce(); }),
+      btn("▶ Final del viaje", () => { close(); playFinale(() => openLetter("c57", null, true)); }, "btn btn--sm btn--gold")),
+    h("div", { class: "section-t" }, "Ir a un planeta"),
+    h("div", { class: "admin-planets" }, ORDER.map((pid, i) => h("button", { class: "admin-p", onclick: () => { close(); go("planet", { id: pid }); } }, planetEl(pid, 40), h("span", null, `${i + 1}. ${P[pid].name}`)))),
+    h("div", { class: "section-t" }, `Las ${LETTERS.length} cartas`),
+    h("div", { class: "admin-letters" }, ORDER.map(pid => h("div", null, h("b", null, P[pid].name), h("div", { class: "m-row", style: { justifyContent: "flex-start", gap: "6px" } }, lettersOf(pid).map(l => h("button", { class: "admin-l", title: l.title, onclick: () => { close(); openLetter(l.id, lettersOf(pid), true); } }, l.n)))))),
+    h("div", { class: "section-t" }, "Probar el juego"),
+    h("div", { class: "m-row", style: { justifyContent: "flex-start" } },
+      btn("✓ Completar todas las misiones", () => { for (const p of ORDER) for (const m of MISSIONS[p]) S.flags = { ...S.flags, [m.flag]: true }; for (const p of ORDER) S.visited = { ...S.visited, [p]: true }; emit(); toast("✓", "Misiones completadas", "Todas las misiones y planetas marcados."); }),
+      btn("✦ +50 chispas", () => { dset({ cred: dget().cred + 50 }); toast("✦", "+50 chispas", `Ahora tienes ${dget().cred}.`); }),
+      btn("🤖 Amistad al máximo", () => { dset({ xp: 200 }); toast("🤖", "Amistad nivel 10", "Todos los accesorios disponibles."); }),
+      btn("🔵 Hacer aparecer a Orbi", () => { dset({ sphereOn: null }); toast("🔵", "Orbi está de camino", "Aparecerá en el próximo planeta que visites."); }),
+      btn("↺ Reiniciar progreso de este dispositivo", () => { if (!confirm("¿Borrar el progreso de ESTE dispositivo? (cartas, misiones, droide). El de Arián no se toca.")) return; Object.assign(S, { readLetters: [], visited: {}, flags: {}, counters: {}, lastPlanet: null, data: { v3seen: true, tourDone: true } }); emit(); close(); go("map"); toast("↺", "Progreso reiniciado", "Este dispositivo empieza de cero."); }, "btn btn--sm btn--ghost")),
+    h("div", { class: "section-t" }, "Salir"),
+    btn("Salir del modo administrador", () => { close(); setAdmin(false); toast("⚙", "Modo administrador desactivado", "La galaxia vuelve a funcionar como para Arián."); }, "btn"),
+  ], null, "⚙");
+}
+function whatsNewForce() { setData("v3seen", false); const keep = S.readLetters; if (!keep.length) S.readLetters = ["c01"]; whatsNew(() => { S.readLetters = keep; }); }

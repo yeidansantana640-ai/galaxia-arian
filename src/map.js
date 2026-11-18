@@ -363,7 +363,7 @@ const MAP = (() => {
     // UI
     const ui = h("div", { class: "map-ui" });
     const head = h("div", { class: "map-head" },
-      h("div", { class: "map-title" }, h("h1", null, "Mapa Galáctico"), h("p", null, `Archivo de las estrellas perdidas · ${herName()}`)),
+      h("div", { class: "map-title", onclick: () => adminTap() }, h("h1", null, "Mapa Galáctico"), h("p", null, `Archivo de las estrellas perdidas · ${herName()}`)),
       h("button", { class: "mtool", "aria-label": "Ayuda: cómo funciona", onclick: () => openHelp() }, h("span", { style: { font: "700 20px var(--f-display)" } }, "?")),
       h("button", { class: "mtool", "aria-label": "Opciones", onclick: () => go("settings") }, icon("gear")));
     nextBtn = h("button", { class: "nextbtn holo", onclick: () => { const nx = nextPlanet(); if (nx) select(nx); } }, h("span", { class: "nb-ic" }, "▶"), h("span", { class: "nb-t" }, h("small"), h("b")));

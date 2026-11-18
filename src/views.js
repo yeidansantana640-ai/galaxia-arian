@@ -83,7 +83,7 @@ let readerEl = null;
 function closeReader() { if (readerEl) { readerEl.remove(); readerEl = null; document.body.classList.toggle("hide-droid", !["map", "planet"].includes(route.name)); rerender(); } }
 function openLetter(id, fromList, noFinale) {
   const l = LBYID[id]; if (!l || !letterUnlocked(l)) return;
-  if (id === "c57" && !noFinale && !S.readLetters.includes(id)) { closeModals(); closeReader(); return playFinale(() => openLetter(id, fromList, true)); }
+  if (id === "c57" && !noFinale && !S.readLetters.includes(id) && !isAdmin()) { closeModals(); closeReader(); return playFinale(() => openLetter(id, fromList, true)); }
   closeModals(); closeReader(); toastBox && toastBox.replaceChildren();
   const K = kindOf(l), firstTime = !S.readLetters.includes(id);
   const sib = (fromList || lettersOf(l.planet)).filter(x => letterUnlocked(x)), idx = sib.findIndex(x => x.id === id);
@@ -415,7 +415,8 @@ function boot() {
   try { history.replaceState({ name: "map", params: {} }, ""); } catch (e) { }
   const start = () => {
     const back = welcomeBack(); render(); rememberRoute();
-    const tour = () => { if (!getData("tourDone")) { if (route.name !== "map") go("map"); setTimeout(startTour, 900); } else if (!back) setTimeout(() => droidSay(droidHint()), 1500); };
+    placeAdminBadge();
+    const tour = () => { if (isAdmin()) return; if (!getData("tourDone")) { if (route.name !== "map") go("map"); setTimeout(startTour, 900); } else if (!back) setTimeout(() => droidSay(droidHint()), 1500); };
     setTimeout(() => whatsNew(tour), 2000);
   };
   const afterIntro = () => S.profile ? start() : setup(start);
