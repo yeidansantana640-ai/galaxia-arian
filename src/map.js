@@ -5,7 +5,7 @@ const MAP = (() => {
   let W = 0, H = 0, dpr = 1;
   const cam = { x: WORLD.w / 2, y: WORLD.h / 2, s: .3 };
   let target = null, minS = .2, maxS = 2.4, sel = null, dirty = true, running = false, built = false, visible = false;
-  let neb, starL = [], galaxies = [], dust = [], nextBtn = null, vigC = null, frameN = 0;
+  let neb, starL = [], galaxies = [], dust = [], nextBtn = null, vigC = null, frameN = 0, miniN = 0, c0 = null, lastBg = 0, wasMoving = false, fcv, fctx, fdpr = 1;
   const nodes = {}, labels = {}, routes = [];
   const toScreen = (x, y) => [(x - cam.x) * cam.s + W / 2, (y - cam.y) * cam.s + H / 2];
   const toWorld = (x, y) => [(x - W / 2) / cam.s + cam.x, (y - H / 2) / cam.s + cam.y];
@@ -65,6 +65,15 @@ const MAP = (() => {
     for (let a = 0; a < 2; a++) { g.beginPath(); for (let t = 0; t < 1; t += .02) { const an = a * Math.PI + t * 5, rr = t * rad; g.lineTo(Math.cos(an) * rr, Math.sin(an) * rr); } g.stroke(); }
     g.restore();
   }
+  function drawFx(time) {
+    const g = fctx; g.setTransform(fdpr, 0, 0, fdpr, 0, 0); g.clearRect(0, 0, W, H);
+    if (!LITE()) {
+      g.fillStyle = "rgba(200,220,255,.35)";
+      for (const d of dust) { d.a += .004; const [sx, sy] = toScreen(d.x + Math.cos(d.a) * 30, d.y + Math.sin(d.a * .7) * 20); if (sx < -10 || sy < -10 || sx > W + 10 || sy > H + 10) continue; g.globalAlpha = .25 + .2 * Math.sin(d.a * 3); g.beginPath(); g.arc(sx, sy, d.r * Math.max(.6, cam.s * 1.4), 0, 7); g.fill(); }
+      g.globalAlpha = 1;
+    }
+    drawShips(g, time);
+  }
   function draw(time) {
     const g = ctx; g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.fillStyle = "#02030a"; g.fillRect(0, 0, W, H);
@@ -76,18 +85,13 @@ const MAP = (() => {
       for (const st of L.arr) {
         let x = ((st.x + ox) % 2000 + 2000) % 2000, y = ((st.y + oy) % 2000 + 2000) % 2000;
         if (x > W + 4 || y > H + 4) continue;
-        const a = .45 + .55 * Math.sin(time * .0012 * (1 + L.depth) + st.tw);
+        const a = .45 + .55 * Math.abs(Math.sin(st.tw));
         g.globalAlpha = a * (.5 + L.depth); g.fillStyle = st.c; g.fillRect(x, y, st.s, st.s);
       }
     }
     g.globalAlpha = 1;
     const step = 200;
     if (cam.s > .45) { g.fillStyle = "rgba(140,180,255,.22)"; g.font = "9px Orbitron, sans-serif"; for (let x = 0; x < WORLD.w; x += step) for (let y = 0; y < WORLD.h; y += step) { const [a, b] = toScreen(x, y); if (a > -20 && a < W && b > -20 && b < H) g.fillText(String.fromCharCode(65 + x / step) + "-" + (y / step + 1), a + 4, b + 11); } }
-    // space dust drifting
-    g.fillStyle = "rgba(200,220,255,.35)";
-    for (const d of dust) { d.a += .002; const [sx, sy] = toScreen(d.x + Math.cos(d.a) * 30, d.y + Math.sin(d.a * .7) * 20); g.globalAlpha = .25 + .2 * Math.sin(d.a * 3); g.beginPath(); g.arc(sx, sy, d.r * Math.max(.6, cam.s * 1.4), 0, 7); g.fill(); }
-    g.globalAlpha = 1;
-    drawShips(g, time);
     // vignette
     if (!vigC || vigC.width !== Math.round(W / 4)) { vigC = document.createElement("canvas"); vigC.width = Math.round(W / 4); vigC.height = Math.round(H / 4); const vg2 = vigC.getContext("2d"), w4 = vigC.width, h4 = vigC.height, vg = vg2.createRadialGradient(w4 / 2, h4 / 2, Math.min(w4, h4) * .35, w4 / 2, h4 / 2, Math.max(w4, h4) * .75); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,.55)"); vg2.fillStyle = vg; vg2.fillRect(0, 0, w4, h4); }
     g.drawImage(vigC, 0, 0, W, H);
@@ -158,7 +162,7 @@ const MAP = (() => {
     }
     const [wx, wy] = [cam.x, cam.y];
     coordsEl.innerHTML = `Coord ${String.fromCharCode(65 + clamp(Math.floor(wx / 200), 0, 25))}-${clamp(Math.floor(wy / 200) + 1, 1, 99)}<br>Zoom ×${(cam.s / minS).toFixed(1)}`;
-    drawMini();
+    if (!(target || vel.active || ptrs.size) || (++miniN % 8) === 0) drawMini();
   }
   function prio(pid) { return (pid === sel ? 100 : 0) + (pid === nextPlanet() ? 50 : 0) + (S.visited[pid] ? 5 : 0) + LAYOUT[pid].r / 10; }
   function drawMini() {
@@ -192,8 +196,15 @@ const MAP = (() => {
       cam.x -= vel.x / cam.s; cam.y -= vel.y / cam.s; vel.x *= .92; vel.y *= .92;
       if (Math.abs(vel.x) + Math.abs(vel.y) < .2) vel.active = false; clampCam(); dirty = true;
     }
-    const busy = target || vel.active || ptrs.size || dirty;
-    if (busy || (++frameN & 1)) draw(t);
+    const moving = !!(target || vel.active || ptrs.size);
+    if (wasMoving && !moving) dirty = true; wasMoving = moving;
+    if (moving || dirty) {
+      // while moving, let the GPU move the last drawn image; repaint only now and then
+      const k = c0 ? cam.s / c0.s : 1, tx = c0 ? (c0.x - cam.x) * cam.s : 0, ty = c0 ? (c0.y - cam.y) * cam.s : 0;
+      if (!moving || !c0 || t - lastBg > 220 || k < .85 || k > 1.25 || Math.abs(tx) > W * .3 || Math.abs(ty) > H * .3) { draw(t); c0 = { x: cam.x, y: cam.y, s: cam.s }; lastBg = t; cv.style.transform = ""; }
+      else cv.style.transform = `translate(${tx}px,${ty}px) scale(${k})`;
+    }
+    if (moving || (++frameN % (LITE() ? 2 : 1)) === 0) drawFx(t);
     if (dirty) { place(); dirty = false; }
     requestAnimationFrame(loop);
   }
@@ -292,8 +303,8 @@ const MAP = (() => {
 
   function resize() {
     if (!cv) return;
-    W = root.clientWidth || innerWidth; dpr = Math.min(W * (root.clientHeight || innerHeight) > 600000 ? 1.25 : 1.5, window.devicePixelRatio || 1); H = root.clientHeight || innerHeight;
-    cv.width = W * dpr; cv.height = H * dpr; minS = fitScale() * .85; maxS = Math.max(1.8, minS * 9);
+    W = root.clientWidth || innerWidth; dpr = Math.min(LITE() ? 1.25 : (W * (root.clientHeight || innerHeight) > 600000 ? 1.25 : 1.5), window.devicePixelRatio || 1); H = root.clientHeight || innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr; fdpr = Math.min(LITE() ? 1 : 1.5, window.devicePixelRatio || 1); fcv.width = W * fdpr; fcv.height = H * fdpr; minS = fitScale() * .85; maxS = Math.max(1.8, minS * 9);
     clampCam(); for (const id in labels) labels[id]._w = 0; kick();
   }
   function refresh() {
@@ -323,7 +334,7 @@ const MAP = (() => {
 
   function build() {
     root = h("div", { class: "map", role: "application", "aria-label": "Mapa galáctico. Arrastra para moverte, pellizca para acercar." });
-    cv = h("canvas"); ctx = cv.getContext("2d");
+    cv = h("canvas"); ctx = cv.getContext("2d", { alpha: false }); fcv = h("canvas", { class: "fx" }); fctx = fcv.getContext("2d");
     svg = s("svg", { class: "map-svg" });
     regionLayer = h("div", { class: "layer", style: { position: "absolute", inset: 0, pointerEvents: "none" } });
     for (const R of REGIONS) regionLayer.append(h("div", { class: "region", "data-x": R.x, "data-y": R.y, style: { left: 0, top: 0 } }, R.t, h("small", null, R.s)));
@@ -368,7 +379,7 @@ const MAP = (() => {
     sheet = h("div", { class: "sheet holo", role: "dialog", "aria-label": "Planeta seleccionado" });
     hintEl = h("div", { class: "map-hint" }, "Toca un planeta · pellizca para acercar");
     ui.append(head, nextBtn, coordsEl, tools, miniWrap, hintEl, sheet);
-    root.append(cv, svg, regionLayer, nodeLayer, labelLayer, ui);
+    root.append(cv, fcv, svg, regionLayer, nodeLayer, labelLayer, ui);
     root.addEventListener("pointerdown", onDown); root.addEventListener("pointermove", onMove);
     root.addEventListener("pointerup", onUp); root.addEventListener("pointercancel", onUp);
     root.addEventListener("wheel", onWheel, { passive: false });

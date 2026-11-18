@@ -53,6 +53,7 @@ const icon = (n, cls) => svgHTML(ICON[n], cls);
 
 /* ================= store (compatible with galaxia-arian:v1) ================= */
 const KEY = "galaxia-arian:v1";
+const LITE = () => { const g = S.settings.graphics; return g === "lite" || (g !== "high" && (matchMedia("(pointer: coarse)").matches || (navigator.hardwareConcurrency || 8) <= 4)); };
 const DEF_SETTINGS = { graphics: "auto", motion: "system", muted: false, volume: .5, textScale: 1, devOpenAll: false, ambience: false };
 const S = {
   profile: null, wizard: null, tutorialDone: false, readLetters: [], settings: { ...DEF_SETTINGS }, introSeen: false,

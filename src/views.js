@@ -263,6 +263,8 @@ function viewSettings() {
     sw("ambience", "Ambiente de los planetas", "Una música suave distinta en cada planeta.", () => route.name === "planet" && ambience(route.params.id)),
     h("div", { class: "setrow" }, h("div", { class: "grow" }, h("b", null, "Volumen")), h("input", { type: "range", min: 0, max: 1, step: .05, value: st.volume, class: "range", style: { width: "50%" }, oninput: e => { S.settings = { ...S.settings, volume: +e.target.value }; save(); }, onchange: () => SFX.select() })),
     sw("reduceMotion", "Reducir animaciones", "Menos movimiento en pantalla.", applySettings),
+    h("div", { class: "setrow", style: { display: "grid", gap: "8px" } }, h("div", null, h("b", null, "Calidad gráfica"), h("span", null, "«Automática» usa el modo ligero en móviles y tablets para que todo vaya fluido.")),
+      h("div", { class: "seg" }, [["auto", "Automática"], ["lite", "Ligera"], ["high", "Máxima"]].map(([k, t]) => h("button", { "aria-pressed": (st.graphics || "auto") === k ? "true" : "false", onclick: () => { S.settings = { ...S.settings, graphics: k }; emit(); applySettings(); SFX.tap(); toast("⚙️", "Calidad gráfica: " + t, "Se aplica del todo al recargar la página."); render(); } }, t)))),
     h("div", { class: "setrow" }, h("div", { class: "grow" }, h("b", null, "Tamaño del texto de las cartas")), h("div", { class: "m-row" }, [.9, 1, 1.15, 1.3].map(v => h("button", { class: "btn btn--sm" + (Math.abs((st.textScale || 1) - v) < .01 ? " btn--primary" : ""), onclick: () => { S.settings = { ...S.settings, textScale: v }; applySettings(); emit(); render(); } }, v === 1 ? "A" : v < 1 ? "a" : v > 1.2 ? "A+" : "A·")))),
     h("div", { class: "section-t" }, "Historia"),
     h("button", { class: "btn", onclick: () => playIntro(() => go("map")) }, "▶ Ver la introducción otra vez"),
@@ -276,6 +278,7 @@ function applySettings() {
   de.dataset.accent = (S.profile && S.profile.saber) || "azul";
   de.dataset.motion = st.reduceMotion || (st.motion === "system" && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "reduced" : "full";
   de.style.setProperty("--ts", st.textScale || 1);
+  de.classList.toggle("lite", LITE());
   if (st.muted) stopAmbience();
 }
 

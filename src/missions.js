@@ -529,13 +529,14 @@ function ambientLayer(pid) {
   const A = AMBI[pid], cv = h("canvas");
   const el = h("div", { class: "pv-amb", "aria-hidden": "true" }, h("div", { class: "sky", style: { background: A.sky } }), cv, svgHTML(`<svg class="scape" viewBox="0 0 100 100" preserveAspectRatio="none">${A.scape}</svg>`), h("div", { class: "veil" }));
   const g = cv.getContext("2d"); let W, H, dpr; const [type, col, n] = A.parts;
-  const size = () => { dpr = Math.min(1.5, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); };
+  const size = () => { dpr = Math.min(LITE() ? 1 : 1.5, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); };
   size(); addEventListener("resize", size);
-  const ps = Array.from({ length: reduced() ? Math.ceil(n / 4) : n }, () => ({ x: Math.random(), y: Math.random(), v: .3 + Math.random(), p: Math.random() * 6.3, s: .6 + Math.random() }));
-  let t = 0;
+  const ps = Array.from({ length: reduced() ? Math.ceil(n / 4) : LITE() ? Math.ceil(n / 2) : n }, () => ({ x: Math.random(), y: Math.random(), v: .3 + Math.random(), p: Math.random() * 6.3, s: .6 + Math.random() }));
+  let t = 0, skip = 0;
   (function fr() {
     if (!cv.isConnected) { removeEventListener("resize", size); return; }
-    t += 1; g.clearRect(0, 0, W, H);
+    if (LITE() && (++skip & 1)) { requestAnimationFrame(fr); return; }
+    t += LITE() ? 2 : 1; g.clearRect(0, 0, W, H);
     for (const p of ps) {
       let x = p.x * W, y = p.y * H;
       switch (type) {

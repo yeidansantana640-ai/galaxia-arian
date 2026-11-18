@@ -541,3 +541,20 @@ textarea.field{min-height:110px;resize:vertical}
 .tabbar{background:rgba(5,7,16,.95)}
 .plabel b{background:rgba(4,6,16,.85)}
 .mtool{background:rgba(8,12,28,.9)}
+.map canvas.fx{pointer-events:none}
+/* light mode for phones & tablets: fewer simultaneous animations */
+.lite .map .planet>.tex{animation:none}
+.lite .map .planet{box-shadow:none}
+.lite .pnode .halo{animation:none!important}
+.lite .reticle svg{animation:none}
+.lite .pnode:not([data-sel]) .reticle .pulse{animation:none}
+.lite .route-on,.lite .route-next{animation:none;filter:none}
+.lite .region{display:none}
+.lite .holo::before{display:none}
+.lite .sphere-ball{animation:none}
+.lite .view-bg::after{display:none}
+.reticle .pulse{animation-play-state:paused}
+.pnode[data-sel] .reticle .pulse{animation-play-state:running}
+.reticle svg{animation-play-state:paused}
+.pnode[data-sel] .reticle svg{animation-play-state:running}
+.map canvas:first-child{will-change:transform;transform-origin:50% 50%}
