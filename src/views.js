@@ -36,10 +36,11 @@ function buildTabbar() {
   tabbar = h("nav", { class: "tabbar", "aria-label": "Secciones" }, TABS.map(([id, label, ic]) => h("button", { class: "tab", "data-id": id, onclick: () => { SFX.tap(); go(id); } }, icon(ic), label, id === "letters" || id === "secrets" ? h("span", { class: "badge" }) : null)));
   document.body.append(tabbar);
 }
+function splitLetters(text, d0, step) { let k = 0; return text.split(" ").map((w, wi, arr) => [h("span", { class: "word" }, [...w].map(c => h("span", { class: "ch", style: { animationDelay: (d0 + (k++) * step) + "s" } }, c))), wi < arr.length - 1 ? " " : null]); }
 const PAGE_ART = { letters: [52, "#7fe3ff"], planets: [55, "#ffd98a"], memories: [54, "#ffb38a"], secrets: [57, "#ffd98a"], settings: [21, "#9fb4ff"] };
 function page(title, lead, ...kids) {
   const art = PAGE_ART[route.name];
-  const t = h("h1", { class: "ptitle", "aria-label": title }, [...title].map((c, i) => h("span", { style: { animationDelay: (.15 + i * .035) + "s" } }, c === " " ? "\u00a0" : c)));
+  const t = h("h1", { class: "ptitle", "aria-label": title }, splitLetters(title, .15, .035));
   const head = h("header", { class: "phead" + (art ? " phead--art" : ""), style: art ? { "--pa": art[1] } : null },
     art ? h("div", { class: "phead-art", "aria-hidden": "true", html: SC.html(art[0]) }) : null,
     art ? h("div", { class: "ptop" }, route.name === "settings" ? null : h("div", { style: { flex: 1 } }), route.name === "settings" ? null : h("button", { class: "mtool", "aria-label": "Opciones", onclick: () => go("settings") }, icon("gear"))) : null,
@@ -86,7 +87,7 @@ function letterCard(l, un) {
   const ok = un.has(l.id), read = S.readLetters.includes(l.id), fav = favs().includes(l.id), lang = LANG[l.language];
   return h("button", { class: "lcard", disabled: !ok, onclick: () => ok && openLetter(l.id), "aria-label": ok ? l.title : "Carta bloqueada" },
     h("div", { class: "lk kind-ic" }, kindIcon(l, !ok)),
-    h("div", { class: "grow" }, h("b", null, ok ? l.title : "Señal cifrada"), h("span", null, ok ? `${kindOf(l).name} · ${CAT[l.category]}${lang ? " · " + lang : ""}` : "🔒 " + hintFor(l.unlock))),
+    h("div", { class: "grow" }, h("b", null, ok ? l.title : "Señal cifrada"), h("span", null, ok ? `${kindOf(l).name} · ${CAT[l.category]}${lang ? " · " + lang : ""}` : hintFor(l.unlock))),
     ok && fav ? h("span", { class: "fav", "aria-label": "Favorita" }, "★") : null,
     ok && !read ? h("span", { class: "new", "aria-label": "Sin leer" }) : null);
 }
@@ -159,7 +160,7 @@ function cineHero(id) {
   if (id === "bespin") pw.append(svgHTML(`<svg class="cine-ring back" viewBox="0 0 200 200"><g transform="rotate(-22 100 100)"><ellipse cx="100" cy="100" rx="96" ry="26" fill="none" stroke="rgba(255,220,205,.5)" stroke-width="7"/><ellipse cx="100" cy="100" rx="82" ry="22" fill="none" stroke="rgba(255,190,215,.32)" stroke-width="4"/></g></svg>`));
   pw.append(planetEl(id, D, { revealed: true, hi: true }));
   if (id === "bespin") pw.append(svgHTML(`<svg class="cine-ring front" viewBox="0 0 200 200"><g transform="rotate(-22 100 100)"><path d="M4 100 A96 26 0 0 0 196 100" fill="none" stroke="rgba(255,225,210,.75)" stroke-width="7"/><path d="M18 100 A82 22 0 0 0 182 100" fill="none" stroke="rgba(255,190,215,.5)" stroke-width="4"/></g></svg>`));
-  const title = h("h1", { class: "cine-title", "aria-label": p.name }, [...p.name].map((c, i) => h("span", { style: { animationDelay: (.25 + i * .07) + "s" } }, c === " " ? "\u00a0" : c)));
+  const title = h("h1", { class: "cine-title", "aria-label": p.name }, splitLetters(p.name, .25, .07));
   const sec = h("section", { class: "pv-cine", style: { "--atm": L.atm } },
     h("div", { class: "cine-glow" }),
     h("div", { class: "cine-x", html: (CINE_X[id] || (() => ""))() }),
@@ -187,11 +188,10 @@ function viewPlanet({ id }) {
       cineHero(id),
       h("section", { class: "pv-info holo" },
         h("p", { class: "desc" }, p.description),
-        h("div", { class: "pv-stats" }, sub.map(t => h("span", { class: "chip chip--accent" }, t)), md === ms.length && ms.length ? h("span", { class: "chip chip--ok" }, "Planeta completado ✓") : null)),
+        h("div", { class: "pv-stats" }, sub.map(t => h("span", { class: "chip chip--accent" }, t)), md === ms.length && ms.length ? h("span", { class: "chip chip--ok" }, "Planeta completado ✓") : null),
+        h("p", { class: "pv-how" }, md === ms.length ? "Has hecho todas sus misiones. Puedes releer sus cartas o seguir el viaje." : "Completa las misiones para abrir las cartas de este planeta."),
+        md === ms.length && nextPlanet() ? h("button", { class: "btn btn--primary btn--sm", onclick: () => { const np = nextPlanet(); SFX.jump(); hyperspace(() => go("planet", { id: np })); } }, `Siguiente destino: ${ORDER.indexOf(nextPlanet()) + 1} · ${P[nextPlanet()].name} →`) : null),
       effs.length ? h("div", { style: { display: "grid", gap: "8px" } }, effs.map(e => h("div", { class: "effect" }, h("div", { class: "ic" }, e.effect.kind === "transmission" ? "📡" : e.effect.kind === "hint" ? "🧭" : "✨"), h("div", null, h("b", null, e.effect.title), h("span", null, e.effect.body))))) : null,
-      h("div", { class: "howto" }, h("b", null, md === ms.length ? "¡Planeta completado!" : "Cómo funciona este planeta"),
-        h("span", null, md === ms.length ? "Ya has hecho todas sus misiones. Puedes releer sus cartas abajo o seguir el viaje." : "Juega las misiones de abajo, empezando por la marcada. Cada misión completada abre cartas nuevas, que aparecen más abajo en «Cartas de este planeta»."),
-        md === ms.length && nextPlanet() ? h("button", { class: "btn btn--primary btn--sm", style: { marginTop: "8px" }, onclick: () => { const np = nextPlanet(); SFX.jump(); hyperspace(() => go("planet", { id: np })); } }, `Siguiente destino: ${ORDER.indexOf(nextPlanet()) + 1} · ${P[nextPlanet()].name} →`) : null),
       h("div", { class: "section-t" }, `Misiones · ${md}/${ms.length}`),
       h("div", { class: "missions" }, (() => { const first = ms.find(m => !flag(m.flag) && missionAvailable(m)); return ms.map((m, i) => {
         const dn = flag(m.flag), av = missionAvailable(m), isFirst = m === first, nL = lettersForFlag(m.flag).length;
@@ -230,7 +230,7 @@ function viewLetters(params) {
     h("div", { class: "summary holo" }, h("div", { class: "ring", style: { "--p": Math.round(got / LETTERS.length * 100) } }, h("span", null, Math.round(got / LETTERS.length * 100) + "%")), h("div", { class: "grow" }, h("b", null, `${got} de ${LETTERS.length} cartas encontradas`), h("span", null, `${read} leídas · ${favs().length} favoritas`))),
     params.planet ? h("button", { class: "btn btn--ghost btn--sm", onclick: () => go("letters") }, "Ver todas las cartas") : npcCard("archivista"),
     seg,
-    h("div", { class: "m-row", style: { justifyContent: "flex-start" } }, [["holo", "📡 Transmisión"], ["archive", "📜 Archivo Jedi"], ["holocron", "◈ Holocrón"]].map(([k, t]) => h("span", { class: "chip" }, t))),
+    h("div", { class: "m-row", style: { justifyContent: "flex-start" } }, [["holo", "Transmisión", "c01"], ["archive", "Archivo Jedi", "c11"], ["holocron", "Holocrón", "c57"]].map(([k, t, id]) => h("span", { class: "chip chip--kind" }, h("span", { class: "kind-ic mini" }, kindIcon(LBYID[id], false)), t))),
     list);
 }
 
@@ -250,7 +250,7 @@ function viewPlanets() {
 /* ================= memories ================= */
 function viewMemories() {
   const un = unlockedSet(), ds = daysSince();
-  const linkL = (id, label) => un.has(id) ? h("button", { class: "btn btn--sm", onclick: () => openLetter(id) }, (label || LBYID[id].title)) : h("span", { class: "chip" }, "🔒 " + LBYID[id].title.replace(/./g, (c, i) => i < 3 ? c : "·").slice(0, 14));
+  const linkL = (id, label) => un.has(id) ? h("button", { class: "btn btn--sm", onclick: () => openLetter(id) }, (label || LBYID[id].title)) : h("span", { class: "chip chip--lock" }, "Carta por descubrir");
   const T = [
     { d: "21 de junio de 2026", t: "El día más largo del año", p: "El solsticio de verano. Sin buscarlo, el principio de esta historia.", l: ["c54"] },
     { d: "Agosto de 2026", t: "El primer viaje", p: "Un avión de Tenerife a Valencia. Todo lo hablado desde lejos tuvo cara, voz y mirada.", l: ["c01", "c07"] },
@@ -349,8 +349,9 @@ function droidSay(txt, ms = 5200) {
   droidBubble && droidBubble.remove();
   if (document.body.classList.contains("sheet-open") || document.body.classList.contains("hide-droid") || $(".modal") || $(".intro") || $(".setup")) return;
   SFX.beep();
-  droidBubble = h("div", { class: "droid-bubble holo", role: "status" }, h("b", { style: { color: "var(--accent)", fontSize: "12px", display: "block" } }, droidName()), txt);
-  document.body.append(droidBubble); const b = droidBubble; setTimeout(() => b.remove(), ms);
+  if (route.name !== "map" && !droidSay.force) return;
+  droidBubble = h("div", { class: "droid-bubble holo", role: "status", onclick: () => droidBubble && droidBubble.remove() }, h("b", null, droidName()), txt, h("span", { class: "db-x", "aria-hidden": "true" }, "✕"));
+  document.body.append(droidBubble); const b = droidBubble; setTimeout(() => b.classList.add("out"), ms - 400); setTimeout(() => b.remove(), ms);
 }
 let droidClicks = 0;
 function placeDroid() {

@@ -787,3 +787,79 @@ html[data-wipe=clock]::view-transition-new(root){animation:wipe-clock .7s linear
 .admin-gallery button{padding:0;border:1px solid var(--hair2);border-radius:12px;overflow:hidden;background:#000;cursor:pointer;color:var(--ink);text-align:left}
 .admin-gallery .scn{display:block;width:100%;height:auto}
 .admin-gallery small{display:block;padding:4px 6px;font-size:10.5px;color:var(--ink2)}
+
+/* ================= DESIGN REVIEW · v-final ================= */
+/* (6) contrast + minimum sizes */
+:root{--ink2:#c4cee4;--ink3:#9aa6c2}
+.plabel small{font-size:11.5px;color:#c4cee4}
+.pcard span,.stat span,.lcard span,.secret-row span,.chip{font-size:12.5px}
+.stat span{letter-spacing:.04em}
+/* (5) Orbitron only for headlines: labels in Inter */
+.eyebrow{font:600 12px var(--f-body);letter-spacing:.14em}
+.section-t{font:600 12px var(--f-body);letter-spacing:.14em}
+.sheet .sector,.paper .stamp,.scene-fig figcaption,.tl .d,.counter span,.fin-p small,.sc-rar{font-family:var(--f-body);letter-spacing:.1em}
+.coords{display:none!important}
+/* (9) letters: no hyphenation */
+.paper p{hyphens:manual;-webkit-hyphens:manual}
+/* (2) words never break inside */
+.word{display:inline-block;white-space:nowrap}
+.cine-title .ch,.ptitle .ch{display:inline-block;animation:letter .8s var(--ease) both}
+.cine-title span.word{animation:none}
+.noanim .ptitle .ch{animation:none}
+.ptitle{font-size:clamp(1.55rem,7.4vw,2.4rem);line-height:1.12;text-wrap:balance}
+/* (10) gate spacing */
+.gate-lock .cube{margin:0 auto 34px}
+/* (1) droid bubble: small, dismissible, never over content */
+.droid-bubble{max-width:min(230px,62vw);font-size:13px;padding:10px 30px 10px 12px;cursor:pointer;bottom:calc(var(--tabh) + var(--sb) + 88px);right:14px;border-radius:16px 16px 4px 16px;transition:opacity .4s,transform .4s}
+.droid-bubble b{display:block;color:var(--accent);font-size:12px}
+.droid-bubble .db-x{position:absolute;top:6px;right:9px;font-size:11px;color:var(--ink3)}
+.droid-bubble.out{opacity:0;transform:translateY(6px)}
+/* (7) one icon language: emoji glyphs become monochrome holographic glyphs */
+.toast .ic,.effect .ic,.help-ic,.secret-row>div:first-child:not(.kind-ic):not(.grow),.ach-group .secret-row>div:first-child,.npc-face+div .eyebrow::before{color:transparent!important;text-shadow:0 0 0 hsl(var(--accent-h) 100% 82%),0 0 12px hsl(var(--accent-h) 100% 65% / .7)}
+.effect .ic{text-shadow:0 0 0 #ffe7a8,0 0 12px rgba(255,190,80,.7)}
+.chip--kind{gap:6px;padding:3px 10px 3px 6px}
+.kind-ic.mini svg{width:18px;height:18px}
+.chip--lock{opacity:.75;border:1px dashed var(--hair2);background:transparent}
+.lcard[disabled] span::before{content:"";display:inline-block;width:10px;height:11px;margin-right:6px;vertical-align:-1px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 11'%3E%3Cpath d='M2 5V3.5a3 3 0 016 0V5h1v6H1V5zm1.5 0h3V3.5a1.5 1.5 0 00-3 0z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 11'%3E%3Cpath d='M2 5V3.5a3 3 0 016 0V5h1v6H1V5zm1.5 0h3V3.5a1.5 1.5 0 00-3 0z'/%3E%3C/svg%3E") center/contain no-repeat}
+/* (4) compact planet info */
+.pv-how{margin:0;font-size:13.5px;color:var(--accent);font-weight:600}
+/* (8) map: fewer floating things on phones */
+@media (pointer:coarse){.map-tools .mtool[aria-label=Acercar],.map-tools .mtool[aria-label=Alejar]{display:none}}
+@media (max-width:1023px){.minimap{display:none}.map-hint{bottom:calc(var(--tabh) + var(--sb) + 18px);left:16px;transform:none}}
+
+/* (3) DESKTOP: side navigation and real use of the width */
+:root{--side:0px}
+@media (min-width:1024px){
+  :root{--side:96px;--tabh:0px}
+  body{padding-left:var(--side)}
+  .tabbar{top:0;bottom:0;left:0;right:auto;width:var(--side);height:auto;grid-template-columns:1fr;grid-auto-rows:86px;align-content:center;gap:6px;padding:0;border-top:0;border-right:1px solid var(--hair);background:linear-gradient(180deg,rgba(6,9,22,.97),rgba(3,4,10,.97))}
+  .tab{font-size:12px;gap:6px}
+  .tab svg{width:26px;height:26px}
+  .tab[aria-current=page]::before{top:20%;bottom:20%;left:0;right:auto;width:3px;height:auto;border-radius:0 4px 4px 0}
+  .tab .badge{top:14px;left:calc(50% + 8px)}
+  .map,.map-ui{left:var(--side)}
+  .pv-amb,.view-bg{left:var(--side)}
+  .pv-cine{width:calc(100vw - var(--side));margin-left:calc(50% - (100vw - var(--side)) / 2)}
+  .phead--art{margin-left:calc(50% - (100vw - var(--side)) / 2);margin-right:calc(50% - (100vw - var(--side)) / 2);padding-left:max(24px,calc((100vw - var(--side)) / 2 - 540px));padding-right:max(24px,calc((100vw - var(--side)) / 2 - 540px));min-height:320px}
+  .phead--art .ptop{left:max(24px,calc((100vw - var(--side)) / 2 - 540px));right:max(24px,calc((100vw - var(--side)) / 2 - 540px))}
+  .view>.page{max-width:1080px}
+  .pv-inner{max-width:1080px}
+  .lcards{grid-template-columns:repeat(2,1fr)}
+  .view .lcards{grid-template-columns:repeat(3,1fr)}
+
+  .counter{max-width:720px}
+  .sheet{left:24px;bottom:24px;transform:translateX(calc(-100% - 60px));width:420px}
+  .sheet[data-open]{transform:none}
+  .minimap{left:24px;right:auto;bottom:24px;width:180px;height:128px}
+  .map-hint{bottom:24px}
+  .droid-fab{bottom:24px;right:24px;width:72px;height:80px}
+  .droid-bubble{bottom:118px;right:28px}
+  .toasts{left:var(--side)}
+  .modal{left:var(--side)}
+  .reader{left:var(--side)}
+  .reader-in{max-width:780px}
+  .scene-fig{max-width:780px}
+  .admin-badge{top:auto;bottom:120px}
+  .pv-cine{height:min(72vh,700px)}
+}
+@media (min-width:1500px){.view .lcards{grid-template-columns:repeat(4,1fr)}}

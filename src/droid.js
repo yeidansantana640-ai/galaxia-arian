@@ -125,7 +125,7 @@ function achievementsView() {
     const items = list.filter(a => a.group === g).sort((x, y) => order[x.state] - order[y.state]);
     const done = items.filter(a => a.state === "hecho").length;
     const det = h("details", { class: "ach-group", open: items.some(a => a.state === "reclamar") ? true : null },
-      h("summary", null, h("b", null, g), h("span", { class: "chip" + (done === items.length ? " chip--ok" : "") }, `${done}/${items.length}`), items.some(a => a.state === "reclamar") ? h("span", { class: "chip chip--gold" }, "¡Reclamar!") : null),
+      h("summary", null, h("b", null, g), h("span", { class: "chip" + (done === items.length ? " chip--ok" : "") }, `${done} de ${items.length} conseguidos`), items.some(a => a.state === "reclamar") ? h("span", { class: "chip chip--gold" }, `${items.filter(a => a.state === "reclamar").length} por reclamar`) : null),
       items.map(a => h("div", { class: "secret-row" },
         h("div", { style: { fontSize: "20px", width: "28px", textAlign: "center" } }, a.state === "hecho" ? "🏅" : a.state === "reclamar" ? "✨" : "◌"),
         h("div", { class: "grow" }, h("b", null, a.title), h("span", null, a.desc), a.state === "activo" ? h("div", { class: "bar", style: { marginTop: "6px" } }, h("i", { style: { width: a.n / a.t * 100 + "%" } })) : null),

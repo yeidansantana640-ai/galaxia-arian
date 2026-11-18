@@ -212,7 +212,7 @@ function adminPanel(tab) {
       sec("Ayuda"),
       row(btn("🧭 Visita guiada", run(() => { go("map"); setTimeout(startTour, 700); })), btn("❔ Manual «¿Cómo funciona?»", run(openHelp)), btn("📡 Mensaje de novedades", run(whatsNewForce)), btn("👋 Bienvenida de vuelta", run(() => { setData("lastSeen", new Date(Date.now() - 2 * 864e5).toISOString()); welcomeBack(); }))),
       sec("Efectos"),
-      row(btn("🚀 Salto al hiperespacio", run(() => { SFX.jump(); hyperspace(() => { }); })), btn("✨ Celebración", run(() => celebrate())), btn("🎺 Fanfarria", () => fanfare()), btn("⚔️ Sable", () => SFX.saber()), btn("🔔 Aviso de prueba", () => toast("📡", "Nueva transmisión holográfica", "Así se ven los avisos que recibe Arián.")), btn("🤖 Frase del droide", run(() => droidSay(droidHint())))),
+      row(btn("🚀 Salto al hiperespacio", run(() => { SFX.jump(); hyperspace(() => { }); })), btn("✨ Celebración", run(() => celebrate())), btn("🎺 Fanfarria", () => fanfare()), btn("⚔️ Sable", () => SFX.saber()), btn("🔔 Aviso de prueba", () => toast("📡", "Nueva transmisión holográfica", "Así se ven los avisos que recibe Arián.")), btn("🤖 Frase del droide", run(() => { droidSay.force = true; droidSay(droidHint()); droidSay.force = false; }))),
       sec("El final"),
       row(btn("◈ Final del viaje + último holocrón", run(() => playFinale(() => openLetter("c57", null, true))), "btn btn--sm btn--gold"), btn("◈ Solo la carta 57", run(() => openLetter("c57", null, true)))),
     ];
