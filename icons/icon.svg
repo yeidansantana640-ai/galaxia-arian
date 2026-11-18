@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="75%"><stop offset="0" stop-color="#1b2452"/><stop offset=".55" stop-color="#0a0f2a"/><stop offset="1" stop-color="#03040a"/></radialGradient>
+    <radialGradient id="neb" cx="30%" cy="30%" r="60%"><stop offset="0" stop-color="#b04cff" stop-opacity=".45"/><stop offset="1" stop-color="#b04cff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="neb2" cx="78%" cy="76%" r="50%"><stop offset="0" stop-color="#3fd0ff" stop-opacity=".35"/><stop offset="1" stop-color="#3fd0ff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="pl" cx="36%" cy="32%" r="75%"><stop offset="0" stop-color="#bff4ff"/><stop offset=".25" stop-color="#5fc4e8"/><stop offset=".6" stop-color="#2a6fa8"/><stop offset="1" stop-color="#0b1d40"/></radialGradient>
+    <linearGradient id="land" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8be39a"/><stop offset="1" stop-color="#2e8a5a"/></linearGradient>
+    <radialGradient id="atm" cx="50%" cy="50%" r="50%"><stop offset=".78" stop-color="#7fe3ff" stop-opacity="0"/><stop offset=".9" stop-color="#7fe3ff" stop-opacity=".55"/><stop offset="1" stop-color="#7fe3ff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffe7a3" stop-opacity="0"/><stop offset=".2" stop-color="#ffd36b"/><stop offset=".5" stop-color="#fff3c8"/><stop offset=".8" stop-color="#e9a93a"/><stop offset="1" stop-color="#ffe7a3" stop-opacity="0"/></linearGradient>
+    <linearGradient id="blade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#e8fbff"/></linearGradient>
+    <linearGradient id="hilt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6e9f0"/><stop offset=".5" stop-color="#8a90a2"/><stop offset="1" stop-color="#3a3f4f"/></linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9"/></filter>
+    <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter>
+    <clipPath id="pc"><circle cx="256" cy="250" r="118"/></clipPath>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <rect width="512" height="512" fill="url(#neb)"/>
+  <rect width="512" height="512" fill="url(#neb2)"/>
+  <g fill="#fff">
+    <circle cx="70" cy="80" r="2.4"/><circle cx="130" cy="44" r="1.6"/><circle cx="420" cy="70" r="2.8"/><circle cx="462" cy="150" r="1.6"/><circle cx="40" cy="210" r="1.8"/><circle cx="96" cy="420" r="2.2"/><circle cx="452" cy="420" r="1.8"/><circle cx="380" cy="470" r="1.4"/><circle cx="200" cy="470" r="1.6"/><circle cx="300" cy="40" r="1.4"/><circle cx="470" cy="300" r="2"/><circle cx="30" cy="330" r="1.4"/>
+  </g>
+  <g fill="#fff" opacity=".9"><path d="M420 70 l0 -10 l2 8 l8 2 l-8 2 l-2 8 l-2 -8 l-8 -2 l8 -2z" transform="translate(-1 0)"/><path d="M96 420 l0 -8 l1.6 6.4 l6.4 1.6 l-6.4 1.6 l-1.6 6.4 l-1.6 -6.4 l-6.4 -1.6 l6.4 -1.6z"/></g>
+  <clipPath id="front"><rect x="0" y="250" width="512" height="300"/></clipPath>
+  <!-- ring back -->
+  <g transform="rotate(-16 256 250)"><ellipse cx="256" cy="250" rx="196" ry="50" fill="none" stroke="url(#ring)" stroke-width="9" opacity=".5"/></g>
+  <!-- planet -->
+  <circle cx="256" cy="250" r="134" fill="url(#atm)"/>
+  <circle cx="256" cy="250" r="118" fill="url(#pl)"/>
+  <g clip-path="url(#pc)" opacity=".85">
+    <path d="M150 200 q40 -30 80 -6 q24 14 10 40 q-14 24 -50 22 q-30 -2 -46 -24z" fill="url(#land)"/>
+    <path d="M270 160 q40 -6 66 22 q18 22 -4 36 q-24 14 -52 0 q-24 -14 -10 -58z" fill="url(#land)"/>
+    <path d="M230 300 q50 -10 90 14 q20 16 0 36 q-40 20 -80 6 q-30 -14 -10 -56z" fill="url(#land)"/>
+    <path d="M140 236 q60 -14 240 -40" stroke="#fff" stroke-opacity=".3" stroke-width="9" fill="none" stroke-linecap="round"/>
+    <path d="M150 290 q80 -20 230 -30" stroke="#fff" stroke-opacity=".2" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <circle cx="360" cy="350" r="160" fill="#000" opacity=".4"/>
+  </g>
+  <!-- ring front -->
+  <g transform="rotate(-16 256 250)"><g clip-path="url(#front)">
+    <ellipse cx="256" cy="250" rx="196" ry="50" fill="none" stroke="#ffd36b" stroke-width="20" opacity=".35" filter="url(#soft)"/>
+    <ellipse cx="256" cy="250" rx="196" ry="50" fill="none" stroke="url(#ring)" stroke-width="10"/>
+  </g></g>
+  <!-- lightsaber, entirely inside -->
+  <g transform="translate(286 414) rotate(-14) scale(.9)">
+    <rect x="-150" y="-13" width="300" height="26" rx="13" fill="#4fe0ff" filter="url(#glow)"/>
+    <rect x="-146" y="-9" width="292" height="18" rx="9" fill="#9ff0ff" filter="url(#soft)"/>
+    <rect x="-142" y="-6" width="284" height="12" rx="6" fill="url(#blade)"/>
+    <g transform="translate(-216 0)">
+      <rect x="0" y="-15" width="72" height="30" rx="6" fill="url(#hilt)"/>
+      <rect x="62" y="-17" width="12" height="34" rx="3" fill="#2a2e3a"/>
+      <rect x="18" y="-11" width="5" height="22" rx="2" fill="#2a2e3a"/><rect x="30" y="-11" width="5" height="22" rx="2" fill="#2a2e3a"/><rect x="42" y="-11" width="5" height="22" rx="2" fill="#2a2e3a"/>
+      <circle cx="8" cy="0" r="4.5" fill="#ff5a6a"/>
+    </g>
+  </g>
+</svg>
