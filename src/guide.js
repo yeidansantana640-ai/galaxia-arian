@@ -34,7 +34,7 @@ async function gate(done) {
   const lock = h("div", { class: "gate-lock" }, h("div", { class: "cube" }, h("div", { class: "cube-in" }, [1, 2, 3, 4, 5, 6].map(() => h("i")))));
   const saber = h("div", { class: "saber gate-saber" });
   const form = h("form", { class: "gate-form", onsubmit: async e => {
-    e.preventDefault();
+    e.preventDefault(); inp.value = inp.value.trim();
     const hv = hash("galaxia|" + inp.value), acct = hv === GATE_Y ? "yeidan" : hv === GATE_H ? "arian" : null;
     const okCode = adminCode(inp.value) || !!acct;
     if (okCode) { msg.textContent = "Abriendo el holocrón…"; msg.className = "gate-msg ok"; const K = await unwrapKey(inp.value); if (!K || !(await openLetters(K))) { msg.textContent = "No se pudieron abrir las cartas. Inténtalo otra vez."; msg.className = "gate-msg"; return; } }
