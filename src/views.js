@@ -416,7 +416,7 @@ function playIntro(done) {
     () => h("div", null, h("div", { style: { width: "54px", height: "54px", margin: "0 auto 14px", borderRadius: "50%", border: "2px solid var(--holo)", boxShadow: "0 0 24px var(--holo)", animation: "breathe 2s infinite" } }), DATA.intro1.slice(0, 4).map((t, k) => h("p", { class: "i-meta", style: { animationDelay: `${.4 + k * .5}s` } }, t)), h("p", { class: "i-line", style: { animationDelay: "2.8s" } }, DATA.intro1[4]), h("p", { class: "i-line i-gold", style: { animationDelay: "4.6s" } }, DATA.intro1[5])),
     () => h("p", { class: "longago" }, "Hace no tanto tiempo, en una isla no muy, muy lejana…"),
     () => { const w = h("div", { class: "crawl-wrap" }, h("div", { class: "crawl" }, h("div", { class: "ep" }, "EPISODIO I"), h("h2", null, DATA.crawl[0]), DATA.crawl.slice(1).map(t => h("p", null, t)))); return w; },
-    () => h("div", { class: "i-title" }, h("div", { style: { width: "90px", height: "90px", filter: "drop-shadow(0 0 20px rgba(127,227,255,.5))" } }, planetEl("naboo", 90)), h("h1", { class: "i-sw" }, "STAR WARS"), h("p", { class: "i-sub" }, "La galaxia de " + herName()), h("p", { class: "i-date" }, "Una historia que comenzó el 21 de junio de 2026"), h("button", { class: "btn btn--gold i-cta", onclick: e => { e.stopPropagation(); end(); } }, "Entrar en la galaxia")),
+    () => h("div", { class: "i-title" }, h("div", { style: { width: "90px", height: "90px", filter: "drop-shadow(0 0 20px rgba(127,227,255,.5))" } }, planetEl("naboo", 90)), h("h1", { class: "i-sw" }, "STAR WARS"), h("p", { class: "i-sub" }, "La galaxia de " + herName()), h("p", { class: "i-date" }, "Una historia que comenzó el 21 de junio de 2026"), h("div", { class: "i-planets", "aria-hidden": "true" }, ORDER.map((pid, k) => h("div", { class: "i-pl", style: { "--k": k, "--y": (Math.sin(k / (ORDER.length - 1) * Math.PI) * -22).toFixed(1) + "px" } }, planetEl(pid, 30, { revealed: true })))), h("button", { class: "btn btn--gold i-cta", onclick: e => { e.stopPropagation(); end(); } }, "Entrar en la galaxia")),
   ];
   const dur = [7200, 5000, 23000, 0];
   const show = () => {
@@ -474,7 +474,8 @@ function boot() {
     setTimeout(() => whatsNew(tour), 2000);
   };
   const afterIntro = () => S.profile ? start() : setup(start);
-  gate(async () => { await syncBoot(); if (!S.introSeen) playIntro(afterIntro); else playSplash(afterIntro); });
+  const fresh = !inSession();
+  gate(async () => { await syncBoot(); if (fresh || !S.introSeen) playIntro(afterIntro); else afterIntro(); });
   addEventListener("pagehide", () => { rememberRoute(); try { localStorage.setItem(KEY, JSON.stringify({ state: { ...S, wizard: null }, version: 3 })); } catch (e) { } });
 }
 document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", boot) : boot();

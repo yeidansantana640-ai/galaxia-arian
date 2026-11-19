@@ -22,8 +22,11 @@ async function openLetters(K) {
 }
 async function storedKeyOk() { try { const k = localStorage.getItem(KKEY) || (openLetters.mem && b64u(openLetters.mem)); return k ? await openLetters(ub64(k)) : false; } catch (e) { return false; } }
 function gateOk() { try { return localStorage.getItem(GATE_KEY) === String(GATE_H); } catch (e) { return !!gateOk.mem; } }
+const SESS_KEY = "galaxia-arian:sess";
+function inSession() { try { return sessionStorage.getItem(SESS_KEY) === "1"; } catch (e) { return !!inSession.mem; } }
+function markSession() { try { sessionStorage.setItem(SESS_KEY, "1"); } catch (e) { inSession.mem = true; } }
 async function gate(done) {
-  if (gateOk() && await storedKeyOk()) return done();
+  if (inSession() && gateOk() && await storedKeyOk()) return done();
   const again = gateOk();
   const cv = h("canvas");
   const inp = h("input", { class: "gate-in", type: "password", autocomplete: "off", autocapitalize: "off", spellcheck: "false", "aria-label": "Contraseña", placeholder: "Código de acceso" });
@@ -34,9 +37,10 @@ async function gate(done) {
     e.preventDefault();
     const okCode = adminCode(inp.value) || hash("galaxia|" + inp.value) === GATE_H;
     if (okCode) { msg.textContent = "Abriendo el holocrón…"; msg.className = "gate-msg ok"; const K = await unwrapKey(inp.value); if (!K || !(await openLetters(K))) { msg.textContent = "No se pudieron abrir las cartas. Inténtalo otra vez."; msg.className = "gate-msg"; return; } }
-    if (adminCode(inp.value)) { try { localStorage.setItem(GATE_KEY, String(GATE_H)); } catch (er) { gateOk.mem = true; } el.remove(); setAdmin(true); toast("⚙", "Modo administrador activado", "Todo está desbloqueado en este dispositivo."); return done(); }
+    if (adminCode(inp.value)) { try { localStorage.setItem(GATE_KEY, String(GATE_H)); } catch (er) { gateOk.mem = true; } markSession(); el.remove(); setAdmin(true); toast("⚙", "Modo administrador activado", "Todo está desbloqueado en este dispositivo."); return done(); }
     if (hash("galaxia|" + inp.value) === GATE_H) {
       try { localStorage.setItem(GATE_KEY, String(GATE_H)); } catch (er) { gateOk.mem = true; }
+      markSession(); if (isAdmin()) setAdmin(false);
       msg.textContent = "Acceso concedido. Bienvenida al archivo."; msg.className = "gate-msg ok";
       lock.querySelector(".cube").classList.add("opening"); SFX.saber(); saber.style.display = "block";
       setTimeout(() => { el.classList.add("out"); setTimeout(() => { el.remove(); done(); }, 700); }, 1300);
@@ -50,9 +54,9 @@ async function gate(done) {
     h("div", { class: "gate-card" }, lock,
       h("div", { class: "eyebrow", style: { color: "var(--gold)" } }, "Archivo Jedi · acceso restringido"),
       h("h1", null, "Holocrón sellado"),
-      h("p", { class: "muted", style: { margin: 0 } }, again ? "Las cartas ahora viajan cifradas. Introduce el código una vez más para abrirlas en este dispositivo." : "Esta galaxia guarda transmisiones privadas. Introduce el código para abrirla."),
+      h("p", { class: "muted", style: { margin: 0 } }, again ? "Bienvenida de nuevo al archivo. Introduce tu código para abrir la galaxia." : "Esta galaxia guarda transmisiones privadas. Introduce el código para abrirla."),
       form, msg, saber,
-      h("p", { class: "gate-foot" }, "Solo hace falta una vez en cada dispositivo.")));
+      h("p", { class: "gate-foot" }, "Te lo pediré cada vez que entres, para saber quién eres.")));
   document.body.append(el); starfield(cv); setTimeout(() => inp.focus(), 300);
 }
 
