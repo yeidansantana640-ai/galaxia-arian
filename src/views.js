@@ -431,7 +431,7 @@ function playIntro(done) {
   show();
 }
 function setup(done) {
-  const draft = { name: "Arián", saber: "azul", droid: "chispa", ...(S.profile || {}) }; let step = 0;
+  const draft = { name: ACCT === "yeidan" ? "Yeidan" : "Arián", saber: "azul", droid: "chispa", ...(S.profile || {}) }; let step = 0;
   const box = h("div", { class: "setup-in" }), el = h("div", { class: "setup", role: "dialog" }, box);
   const draw = () => {
     document.documentElement.dataset.accent = draft.saber;
@@ -441,7 +441,7 @@ function setup(done) {
       () => [h("div", { class: "eyebrow" }, "Ceremonia del cristal"), h("h1", null, "Elige el color de tu sable"), h("p", { class: "muted", style: { margin: 0 } }, "Su luz teñirá toda la galaxia. Podrás cambiarlo después."), h("div", { class: "swatches", style: { justifyContent: "center", gap: "14px" } }, DATA.sabers.map(c => h("button", { class: "swatch", style: { "--c": c.hex, width: "54px", height: "54px" }, "aria-label": c.label, "aria-pressed": draft.saber === c.id ? "true" : "false", onclick: () => { draft.saber = c.id; SFX.saber(); draw(); } }, h("i")))), h("div", { class: "saber", style: { margin: "10px 20px" } })],
       () => [h("div", { class: "eyebrow" }, "Asignación de droide"), h("h1", null, "Tu compañero de viaje"), h("p", { class: "muted", style: { margin: 0 } }, "Te dará pistas y te recordará lo que falta por descubrir."), h("div", { class: "droid-pick" }, DATA.droids.map(d => h("button", { "aria-pressed": draft.droid === d.id ? "true" : "false", onclick: () => { draft.droid = d.id; SFX.beep(); draw(); } }, droidSVG(d.id, 56), h("b", null, d.label), h("small", null, d.note))))],
     ][step]();
-    box.replaceChildren(dots, ...body, h("div", { style: { display: "flex", gap: "10px" } }, step ? h("button", { class: "btn", onclick: () => { step--; draw(); } }, "Atrás") : null, h("button", { class: "btn btn--primary", style: { flex: 1 }, onclick: () => { if (step < 2) { step++; SFX.select(); draw(); } else { S.profile = { avatar: "estrella", accent: "cielo", ship: "alba", createdAt: new Date().toISOString(), ...draft, name: (draft.name || "").trim() || "Arián" }; emit(); el.remove(); applySettings(); done(); } } }, step < 2 ? "Siguiente" : "Empezar la aventura")));
+    box.replaceChildren(dots, ...body, h("div", { style: { display: "flex", gap: "10px" } }, step ? h("button", { class: "btn", onclick: () => { step--; draw(); } }, "Atrás") : null, h("button", { class: "btn btn--primary", style: { flex: 1 }, onclick: () => { if (step < 2) { step++; SFX.select(); draw(); } else { S.profile = { avatar: "estrella", accent: "cielo", ship: "alba", createdAt: new Date().toISOString(), ...draft, name: (draft.name || "").trim() || (ACCT === "yeidan" ? "Yeidan" : "Arián") }; emit(); el.remove(); applySettings(); done(); } } }, step < 2 ? "Siguiente" : "Empezar la aventura")));
   };
   document.body.append(el); draw();
 }
@@ -474,7 +474,7 @@ function boot() {
     setTimeout(() => whatsNew(tour), 2000);
   };
   const afterIntro = () => S.profile ? start() : setup(start);
-  const fresh = !inSession();
+  let fresh = !inSession(); try { if (sessionStorage.getItem("galaxia-arian:playintro")) { sessionStorage.removeItem("galaxia-arian:playintro"); fresh = true; } } catch (e) { }
   gate(async () => { await syncBoot(); if (fresh || !S.introSeen) playIntro(afterIntro); else afterIntro(); });
   addEventListener("pagehide", () => { rememberRoute(); try { localStorage.setItem(KEY, JSON.stringify({ state: { ...S, wizard: null }, version: 3 })); } catch (e) { } });
 }

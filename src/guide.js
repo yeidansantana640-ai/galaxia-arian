@@ -1,5 +1,5 @@
 /* ================= GATE, HELP, TOUR, MEMORY ================= */
-const GATE_KEY = "galaxia-arian:gate", GATE_H = 840749505, KKEY = "galaxia-arian:k";
+const GATE_KEY = "galaxia-arian:gate", GATE_H = 840749505, GATE_Y = 3277667281, KKEY = "galaxia-arian:k";
 /* letters are encrypted (AES-GCM); the data key is wrapped with the password and with the admin code */
 const ub64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0)), b64u = u => btoa(String.fromCharCode(...u));
 async function unwrapKey(pass) {
@@ -35,12 +35,19 @@ async function gate(done) {
   const saber = h("div", { class: "saber gate-saber" });
   const form = h("form", { class: "gate-form", onsubmit: async e => {
     e.preventDefault();
-    const okCode = adminCode(inp.value) || hash("galaxia|" + inp.value) === GATE_H;
+    const hv = hash("galaxia|" + inp.value), acct = hv === GATE_Y ? "yeidan" : hv === GATE_H ? "arian" : null;
+    const okCode = adminCode(inp.value) || !!acct;
     if (okCode) { msg.textContent = "Abriendo el holocrón…"; msg.className = "gate-msg ok"; const K = await unwrapKey(inp.value); if (!K || !(await openLetters(K))) { msg.textContent = "No se pudieron abrir las cartas. Inténtalo otra vez."; msg.className = "gate-msg"; return; } }
     if (adminCode(inp.value)) { try { localStorage.setItem(GATE_KEY, String(GATE_H)); } catch (er) { gateOk.mem = true; } markSession(); el.remove(); setAdmin(true); toast("⚙", "Modo administrador activado", "Todo está desbloqueado en este dispositivo."); return done(); }
-    if (hash("galaxia|" + inp.value) === GATE_H) {
+    if (acct) {
       try { localStorage.setItem(GATE_KEY, String(GATE_H)); } catch (er) { gateOk.mem = true; }
       markSession(); if (isAdmin()) setAdmin(false);
+      if (acct !== ACCT) { // cambiar de cuenta: se recarga con el progreso de la otra persona
+        try { localStorage.setItem(ACCT_KEY, acct); sessionStorage.setItem("galaxia-arian:playintro", "1"); localStorage.setItem(KEY, JSON.stringify({ state: { ...S, wizard: null }, version: 3 })); } catch (er) { }
+        msg.textContent = acct === "yeidan" ? "Hola, Yeidan. Abriendo tu galaxia…" : "Hola, Arián. Abriendo tu galaxia…"; msg.className = "gate-msg ok";
+        lock.querySelector(".cube").classList.add("opening"); SFX.saber();
+        return setTimeout(() => location.reload(), 1200);
+      }
       msg.textContent = "Acceso concedido. Bienvenida al archivo."; msg.className = "gate-msg ok";
       lock.querySelector(".cube").classList.add("opening"); SFX.saber(); saber.style.display = "block";
       setTimeout(() => { el.classList.add("out"); setTimeout(() => { el.remove(); done(); }, 700); }, 1300);

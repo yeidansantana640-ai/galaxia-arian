@@ -1,12 +1,12 @@
 // Cifra el texto de las cartas con AES-GCM. La clave de datos se guarda envuelta
-// con la contraseña de Arián y con el código de administrador (PBKDF2-SHA256).
+// con la contraseña de Arián, la de Yeidan (YyA) y el código de administrador (PBKDF2-SHA256).
 // Uso:  node src/cartas/cifrar.mjs          (lee src/data.js -> escribe src/data.public.js y src/data.enc.js)
 import { readFileSync, writeFileSync } from "node:fs";
 import { webcrypto as C } from "node:crypto";
 const dir = new URL("..", import.meta.url).pathname;
 const src = readFileSync(dir + "data.js", "utf8");
 const DATA = JSON.parse(src.slice(src.indexOf("=") + 1).trim().replace(/;$/, ""));
-const PASSWORDS = ["AyY", "Yeidan21"], ITER = 150000;
+const PASSWORDS = ["AyY", "Yeidan21", "YyA"], ITER = 150000;
 const b64 = u => Buffer.from(u).toString("base64");
 const rnd = n => C.getRandomValues(new Uint8Array(n));
 const enc = new TextEncoder();

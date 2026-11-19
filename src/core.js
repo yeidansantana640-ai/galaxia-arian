@@ -52,7 +52,10 @@ const ICON = {
 const icon = (n, cls) => svgHTML(ICON[n], cls);
 
 /* ================= store (compatible with galaxia-arian:v1) ================= */
-const KEY = "galaxia-arian:v1";
+/* cuentas: "arian" (AyY) y "yeidan" (YyA). Cada una guarda su propio progreso, también en el mismo dispositivo */
+const ACCT_KEY = "galaxia-arian:acct";
+const ACCT = (() => { try { return localStorage.getItem(ACCT_KEY) === "yeidan" ? "yeidan" : "arian"; } catch (e) { return "arian"; } })();
+const KEY = ACCT === "yeidan" ? "galaxia-arian:v1:yeidan" : "galaxia-arian:v1";
 const LITE = () => { const g = S.settings.graphics; return g === "lite" || (g !== "high" && (matchMedia("(pointer: coarse)").matches || (navigator.hardwareConcurrency || 8) <= 4)); };
 const DEF_SETTINGS = { graphics: "auto", motion: "system", muted: false, volume: .5, textScale: 1, devOpenAll: false, ambience: false, lang: "es" };
 const S = {

@@ -2,7 +2,7 @@
 // El progreso se guarda cifrado (AES-GCM, con una clave derivada de la de las cartas) en una tabla de Supabase.
 // Sin la contraseña de entrada nadie puede saber qué fila es ni leer lo que hay dentro.
 const SYNC_CFG = { url: "https://muwasytyllxxbrmsibvo.supabase.co", key: "sb_publishable__LWr9653TGdjGle1xi3Rcg_aRE_O8mV" }; // ← URL del proyecto y clave pública (anon / publishable) de Supabase
-const SYNC_META = "galaxia-arian:sync";
+const SYNC_META = ACCT === "yeidan" ? "galaxia-arian:sync:yeidan" : "galaxia-arian:sync";
 const SYNC_UNION = ["seenUnlock", "fauna", "porgs", "diary", "postcards", "places", "capsule", "missions", "beacons", "trips"];
 const syncOn = () => !!(SYNC_CFG.url && SYNC_CFG.key) && !isAdmin();
 const syncState = { status: "off", at: 0, busy: null, again: false, ready: false };
@@ -17,8 +17,8 @@ async function syncKeys() {
   if (!raw) return null;
   const C = crypto.subtle, K = ub64(raw), enc = new TextEncoder();
   const dig = async tag => new Uint8Array(await C.digest("SHA-256", new Uint8Array([...enc.encode(tag), ...K])));
-  const id = [...await dig("galaxia-sync-id|")].map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 40);
-  const key = await C.importKey("raw", await dig("galaxia-sync-key|"), "AES-GCM", false, ["encrypt", "decrypt"]);
+  const id = [...await dig(ACCT === "yeidan" ? "galaxia-sync-id|yeidan|" : "galaxia-sync-id|")].map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 40);
+  const key = await C.importKey("raw", await dig(ACCT === "yeidan" ? "galaxia-sync-key|yeidan|" : "galaxia-sync-key|"), "AES-GCM", false, ["encrypt", "decrypt"]);
   return (syncKeys.v = { id, key });
 }
 function syncHeaders(extra) {
