@@ -141,5 +141,7 @@ const SC = (() => {
     46: "Mustafar · ríos de lava", 47: "Mustafar · dos caminos", 48: "Intensidad o calma", 49: "Mustafar · después de la tormenta",
     50: "Yavin 4 · el templo al amanecer", 51: "Yavin 4 · el primer despegue", 52: "Un mensaje confiado a un droide", 53: "La trinchera · confiar en lo aprendido", 54: "21 de junio de 2026", 55: "El mapa de lo que queda", 56: "Tenerife → Valencia", 57: "El último holocrón",
   };
-  return { html: n => (S[n] ? scene(S[n]()) : ""), cap: n => CAP[n] || "" };
+  const THUMB = {};
+  const thumb = n => THUMB[n] || (THUMB[n] = S[n] ? "data:image/svg+xml;charset=utf-8," + encodeURIComponent(scene(S[n]()).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ')) : "");
+  return { html: n => (S[n] ? scene(S[n]()) : ""), cap: n => CAP[n] || "", thumb };
 })();

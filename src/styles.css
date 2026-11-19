@@ -986,3 +986,12 @@ html.lang-out body{transition:opacity .25s,filter .25s;opacity:0;filter:blur(6px
 .splash .longago{animation:lga 2.6s ease both}
 .sp-planet{width:96px;height:96px;filter:drop-shadow(0 0 22px rgba(127,227,255,.55));animation:zoomout 1.1s cubic-bezier(.2,.8,.2,1) both}
 .sp-saber{width:min(260px,62vw);height:4px;border-radius:4px;margin-top:8px;background:#fff;box-shadow:0 0 8px #fff,0 0 18px var(--saber,#4fe0ff),0 0 34px var(--saber,#4fe0ff);transform-origin:left;animation:ignite .5s .5s cubic-bezier(.2,.9,.3,1) both}
+/* ===== miniaturas de escena en las cartas ===== */
+.lcard .lk--scene{width:64px;height:64px;border-radius:12px;overflow:hidden;position:relative;display:block;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 6px 16px rgba(0,0,0,.35)}
+.lcard .lk--scene img{width:100%;height:100%;object-fit:cover;display:block}
+.lcard .lk-kind{position:absolute;right:3px;bottom:3px;width:22px;height:22px;border-radius:7px;background:rgba(4,6,16,.78);display:grid;place-items:center}
+.lcard .lk-kind svg{width:16px !important;height:16px !important}
+.lcard:hover .lk--scene img{transform:scale(1.06);transition:transform .4s}
+.plabel small:empty{display:none}
+@media (max-width:520px){.map-title p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100vw - 210px)}}
+@media (max-width:420px){.map-title h1{letter-spacing:.11em;white-space:nowrap;font-size:14px}}

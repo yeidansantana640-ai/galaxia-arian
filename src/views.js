@@ -86,7 +86,7 @@ function hintFor(u) {
 function letterCard(l, un) {
   const ok = un.has(l.id), read = S.readLetters.includes(l.id), fav = favs().includes(l.id), lang = LANG[l.language];
   return h("button", { class: "lcard", disabled: !ok, onclick: () => ok && openLetter(l.id), "aria-label": ok ? l.title : "Carta bloqueada" },
-    h("div", { class: "lk kind-ic" }, kindIcon(l, !ok)),
+    ok && SC.thumb(l.n) ? h("div", { class: "lk lk--scene" }, h("img", { src: SC.thumb(l.n), alt: "", loading: "lazy", decoding: "async" }), h("span", { class: "lk-kind kind-ic" }, kindIcon(l, false))) : h("div", { class: "lk kind-ic" }, kindIcon(l, !ok)),
     h("div", { class: "grow" }, h("b", null, ok ? l.title : "Señal cifrada"), h("span", null, ok ? `${kindOf(l).name} · ${CAT[l.category]}${lang ? " · " + lang : ""}` : hintFor(l.unlock))),
     ok && fav ? h("span", { class: "fav", "aria-label": "Favorita" }, "★") : null,
     ok && !read ? h("span", { class: "new", "aria-label": "Sin leer" }) : null);
@@ -405,7 +405,7 @@ function playSplash(done) {
       h("div", { class: "sp-saber" })));
     try { SFX.saber(); } catch (e) { }
   }, 2600));
-  tms.push(setTimeout(end, 5600));
+  tms.push(setTimeout(end, 6600));
   el.addEventListener("click", end);
 }
 function playIntro(done) {

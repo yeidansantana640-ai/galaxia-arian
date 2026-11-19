@@ -322,7 +322,7 @@ const MAP = (() => {
       n.toggleAttribute("data-next", pid === nx); n.toggleAttribute("data-locked", !planetUnlocked(pid));
       lb.toggleAttribute("data-next", pid === nx); lb.toggleAttribute("data-done", !!done);
       const un = unlockedSet(), ls = lettersOf(pid), got = ls.filter(l => un.has(l.id)).length;
-      lb.querySelector("small").textContent = !planetUnlocked(pid) ? "Se revela al visitar 10" : pid === nx ? (S.visited[pid] ? "▶ Sigue aquí" : "▶ Ve aquí") : done ? "Completado ✓" : S.visited[pid] ? nCartas(got) : "Sin explorar";
+      lb.querySelector("small").textContent = !planetUnlocked(pid) ? "Se revela al visitar 10" : pid === nx ? (S.visited[pid] ? "▶ Sigue aquí" : "▶ Ve aquí") : done ? "Completado ✓" : S.visited[pid] ? nCartas(got) : "";
       lb.querySelector("b").textContent = `${ORDER.indexOf(pid) + 1} · ` + (planetUnlocked(pid) ? P[pid].name : "¿?");
       n.querySelector(".numtag").textContent = ORDER.indexOf(pid) + 1;
       lb._w = 0;
